@@ -3,8 +3,11 @@ The entire bee movie script except every bee is replaced with useful data and an
 
 # CONTRIBUTORS
 Lauren Wang
+
 Kate Denier
+
 Aroofa Mohammad
+
 Aman Shah
 
 # TO-DO
