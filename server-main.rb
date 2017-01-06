@@ -21,11 +21,12 @@ def api(path) #Returns the FRC API file for the specified path in JSON format.
       "accept" => "application/json" #We want JSON files, so we will ask for JSON
     ).read
   rescue
-    return '{}' #If error, return empty JSON-like.
+    return '{}' #If error, return empty JSON-ish.
   end
 end
 
 $events = api('events/') #Get a list of events (competitions regionals etc) from FRC API
+
 
 ################################################
 #############BEGIN REQUEST HANDLING#############
@@ -33,21 +34,78 @@ $events = api('events/') #Get a list of events (competitions regionals etc) from
 #GET - Client requests data from a specified resource
 #POST - Client submits data to be processed to a specified resource
 
-get '/events' do #Pass a JSON of the events we got directly from the API, as well as an identifier
-  content_type :json
-  $events
+###GET REQUESTS
+
+get '/events' do #Return a JSON of the events we got directly from the API, as well as an identifier
+	content_type :json
+ 	$events
 end
 
-post '/pit' do #Pit scouting (receive team data) #HANDLE A TXT FILE also GIVE THE STUFF NEEDED
-  begin
-  	#Congration u done it
-    status 200
-  rescue => e
-    puts e
-    status 400
-  end
+get '/getmatchlist:name' do #:name - event name parameter, Return all matches under event of :name
+	content_type :json
+	'{"test":"here is the matches"}'
 end
 
+get '/getteammatch' do #Return a JSON of match data for a particular team?? (idk.. Ian vult)
+	content_type :json
+	'{"test":"here is a team match"}'
+end
+
+###POST REQUESTS
+
+post '/postpit' do #Pit scouting (receive team data) #input type is txt file
+	begin
+  		#Congration u done it
+    	status 200
+	rescue => e
+    	puts e
+    	status 400
+	end
+end
+
+post '/postteammatch' do #Team scouting (recieve team and match data) #input type is txt file
+	begin
+		status 200
+	rescue => e
+		puts e
+		status 400
+	end
+end
+
+
+################################################
+#############BEGIN NUMBER CRUNCHING#############
+################################################
+
+##Helpful stuff##
+#params[:param]
+#JSON.parse
+#to_json
+#File.open('public/data/_____','r' or 'w')
+#File.close
+
+def txtToJson(filename) #return json version of Ian's text file
+	txtfile = File.open(filename,'r')
+	content = ''
+	txtfile.each do |line|
+		content << line
+	end
+	txtfile.close
+	JSON.parse(content)
+end
+
+def saveMatchInfo()
+
+end
+
+def saveTeamInfo()
+
+end
+
+
+################################################
+################BEGIN ANALYTICS#################
+################################################
 
 
 #Match scouting (send list of matches, alliances, teams)

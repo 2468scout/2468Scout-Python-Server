@@ -7,9 +7,6 @@ Kate Denier
 Aroofa Mohammad
 
 # TO-DO
-Client Thread Creation
- > Port number 8080
- > Timeout
 Receive JSON from Blue Alliance
 Send JSON to Client (scout teams)
  > Team numbers each alliance
@@ -53,11 +50,13 @@ Fun Stuff
  > The Doodle Tradition
  > Animations
 
-#IAN WANTS
+# IAN WANTS
 Simulations
-Slack Bot
+Slack Bot (Kate)
 
-#TO CONTRIBUTE: do these first!
+# NAMING CONVENTIONS
+
+# TO CONTRIBUTE: do these first!
 git clone https://github.com/2468scout/2468Scout-Ruby-Server.git #Do this in git.
 gem install sinatra-contrib #Run this in Ruby.
 echo TOKENGOESHERE >> apitoken #Run this in Ruby. Make sure apitoken is gitignore'd, as it cannot be posted publicly. Seriously.
