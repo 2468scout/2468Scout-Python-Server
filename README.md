@@ -3,8 +3,11 @@ The entire bee movie script except every bee is replaced with useful data and an
 
 # CONTRIBUTORS
 Lauren Wang
+
 Kate Denier
+
 Aroofa Mohammad
+
 Aman Shah
 
 # TO-DO
@@ -58,6 +61,14 @@ Slack Bot (Kate)
 # NAMING CONVENTIONS
 
 # TO CONTRIBUTE: do these first!
-git clone https://github.com/2468scout/2468Scout-Ruby-Server.git #Do this in git.
-gem install sinatra-contrib #Run this in Ruby.
-echo TOKENGOESHERE ** apitoken #Run this in Ruby. Make sure apitoken is gitignore'd, as it cannot be posted publicly. Seriously.
+Do this in Git.
+
+git clone https://github.com/2468scout/2468Scout-Ruby-Server.git
+
+Run this in Ruby.
+
+gem install sinatra-contrib
+
+Run this in Ruby. Make sure apitoken is gitignore'd, as it cannot be posted publicly. Seriously.
+
+echo TOKENGOESHERE
