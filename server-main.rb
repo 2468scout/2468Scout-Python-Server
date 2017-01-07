@@ -8,6 +8,7 @@ require 'uri'     #Uniform Resource Identifiers (interact with FRC API and clien
 set :bind, '0.0.0.0'
 set :port, 8080   #DO NOT CHANGE without coordination w/client
 
+Dir.mkdir 'public' unless File.exists? 'public' #Sinatra will be weird otherwise
 Dir.mkdir 'public/data' unless File.exists? 'public/data' #Data is to be gitignored. The server will have to create a folder for itself.
 
 $server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches

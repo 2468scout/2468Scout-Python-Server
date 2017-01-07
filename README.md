@@ -75,4 +75,4 @@ gem install sinatra-contrib
 
 Run this in Git. Make sure apitoken is gitignore'd, as it cannot be posted publicly. Seriously.
 
-echo TOKENGOESHERE >> apitoken
+echo TOKENGOESHERE >> apitoken.txt
