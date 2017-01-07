@@ -11,7 +11,7 @@ set :port, 8080   #DO NOT CHANGE without coordination w/client
 Dir.mkdir 'public/data' unless File.exists? 'public/data' #Data is to be gitignored. The server will have to create a folder for itself.
 
 $server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
-$token = open('apitoken').read #Auth token from installation
+$token = open('apitoken.txt').read #Auth token from installation
 
 def api(path) #Returns the FRC API file for the specified path in JSON format.
   begin
