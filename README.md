@@ -46,6 +46,10 @@ Aman Shah
  * Packet loss
  * Too much data too little time
  * Hackerman
+* The Cloud
+ * Get a host other than my PC
+ * Configure domain name
+ * Database integration
 * Auhorization
  * FRC API compliant key (can't run the code without it - talk to Lauren)
  * Key separate from Github?
