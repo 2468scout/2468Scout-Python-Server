@@ -88,18 +88,18 @@ end
 #File.open('public/data/_____','r' or 'w')
 #File.close
 
-#def txtToJson(filename) #return json version of Ian's text file
-#	txtfile = File.open(filename,'r')
-#	content = ''
-#	txtfile.each do |line|
-#		content << line
-#	end
-#	txtfile.close
-#	JSON.parse(content)
-#end
+def retrieveJSON(filename) #return JSON of a file to make it available for rewrite
+	txtfile = File.open(filename,'r')
+	content = ''
+	txtfile.each do |line|
+		content << line
+	end
+	txtfile.close
+	JSON.parse(content)
+end
 
-def saveMatchInfo()
-
+def saveTeamMatchInfo(matchnumber=0,teamnumber=0)
+	File.open("Data_Match"+matchnumber+"_Team"+matchnumber,'w')
 end
 
 def saveTeamInfo()
