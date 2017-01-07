@@ -69,6 +69,6 @@ Run this in Ruby.
 
 gem install sinatra-contrib
 
-Run this in Ruby. Make sure apitoken is gitignore'd, as it cannot be posted publicly. Seriously.
+Run this in Git. Make sure apitoken is gitignore'd, as it cannot be posted publicly. Seriously.
 
-echo TOKENGOESHERE
+echo TOKENGOESHERE >> apitoken
