@@ -2,7 +2,7 @@
 require 'sinatra' #Web server
 require 'json'    #Send & receive JSON data
 require 'open-uri'#Wrapper for Net::HTTP (interact with FRC API and client)
-require 'uri'     #Uniform Resource Identifiers (interact with FRC API)
+require 'uri'     #Uniform Resource Identifiers (interact with FRC API and client)
 
 #Initialization stuff - shamelessly ripped from Isaac
 set :bind, '0.0.0.0'
@@ -53,9 +53,11 @@ end
 
 ###POST REQUESTS
 
-post '/postpit' do #Pit scouting (receive team data) #input type is txt file
+post '/postpit' do #Pit scouting (receive team data) #input is an actual string
 	begin
   		#Congration u done it
+  		testvar = params['test']
+  		puts testvar
     	status 200
 	rescue => e
     	puts e
@@ -63,8 +65,10 @@ post '/postpit' do #Pit scouting (receive team data) #input type is txt file
 	end
 end
 
-post '/postteammatch' do #Team scouting (recieve team and match data) #input type is txt file
+post '/postteammatch' do #Team scouting (recieve team and match data) #input is an actual string
 	begin
+		testvar = params['test']
+  		puts testvar
 		status 200
 	rescue => e
 		puts e
@@ -78,21 +82,21 @@ end
 ################################################
 
 ##Helpful stuff##
-#params[:param]
+#params['param']
 #JSON.parse
 #to_json
 #File.open('public/data/_____','r' or 'w')
 #File.close
 
-def txtToJson(filename) #return json version of Ian's text file
-	txtfile = File.open(filename,'r')
-	content = ''
-	txtfile.each do |line|
-		content << line
-	end
-	txtfile.close
-	JSON.parse(content)
-end
+#def txtToJson(filename) #return json version of Ian's text file
+#	txtfile = File.open(filename,'r')
+#	content = ''
+#	txtfile.each do |line|
+#		content << line
+#	end
+#	txtfile.close
+#	JSON.parse(content)
+#end
 
 def saveMatchInfo()
 
