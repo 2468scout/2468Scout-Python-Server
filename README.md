@@ -58,21 +58,22 @@ Aman Shah
  * The Doodle Tradition
  * Animations
 
-# IAN WANTS
+# IAN VULT
 Simulations
 Slack Bot (Kate)
 
 # NAMING CONVENTIONS
+* Event string codes: stuff that happens in a match. https://docs.google.com/document/d/1R51aN8jQxovCz6G7pOAtSW9ZRAhzVhrsSbaVJhcE8u0/edit?usp=sharing
 
 # TO CONTRIBUTE: do these first!
 Do this in Git.
 
 git clone https://github.com/2468scout/2468Scout-Ruby-Server.git
 
+Run this in Git. Make sure apitoken.txt is gitignore'd, as it cannot be posted publicly. Seriously.
+
+echo TOKENGOESHERE >> apitoken.txt
+
 Run this in Ruby.
 
 gem install sinatra-contrib
-
-Run this in Git. Make sure apitoken is gitignore'd, as it cannot be posted publicly. Seriously.
-
-echo TOKENGOESHERE >> apitoken.txt

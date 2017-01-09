@@ -16,12 +16,14 @@ $token = open('apitoken.txt').read #Auth token from installation
 
 def api(path) #Returns the FRC API file for the specified path in JSON format.
   begin
+  	puts "I am accessing the API"
     open("#{$server}#{path}", #https://frc-api. ... .org/v.2.0/ ... /the thing we want
       #"User-Agent" => "https://github.com/2468scout/2468Scout-Ruby-Server", #Dunno what this is but Isaac did it
       "Authorization" => "Basic #{$token}", #Standard procedure outlined by their API
       "accept" => "application/json" #We want JSON files, so we will ask for JSON
     ).read
   rescue
+  	puts "Something went wrong"
     return '{}' #If error, return empty JSON-ish.
   end
 end
@@ -70,6 +72,8 @@ post '/postteammatch' do #Team scouting (recieve team and match data) #input is 
 	begin
 		testvar = params['test']
   		puts testvar
+  		#saveTeamMatchInfo(eventcode,matchnumber,teamnumber,jsondata)
+  		#EXPERIMENTAL: saveMatchInfo(??) for simulations
 		status 200
 	rescue => e
 		puts e
@@ -99,12 +103,35 @@ def retrieveJSON(filename) #return JSON of a file to make it available for rewri
 	JSON.parse(content)
 end
 
-def saveTeamMatchInfo(matchnumber=0,teamnumber=0)
-	File.open("Data_Match"+matchnumber+"_Team"+matchnumber,'w')
+def saveTeamMatchInfo(eventcode="", matchnumber=0,teamnumber=0,jsondata='{}')
+	jsondata = JSON.parse(jsondata)
+	filename = eventcode+"_Match"+matchnumber+"_Team"+teamnumber+".json"
+	existingjson = '{}'
+	if File.exists? filename do
+		existingjson = retrieveJSON(filename)
+	end
+	jsonfile = File.open(filename,'w')
+	#compare jsondata to existingjson
+	#p = includes position
+	#c = includes count
+	#https://docs.google.com/document/d/1R51aN8jQxovCz6G7pOAtSW9ZRAhzVhrsSbaVJhcE8u0/edit?usp=sharing
+	
+	#array of all MatchEvent objects into file
+	jsonfile.close
+
 end
 
-def saveTeamInfo()
-
+def saveTeamPitInfo()
+	jsondata = JSON.parse(jsondata)
+	filename = eventcode+"_Pit_Team"+teamnumber+".json"
+	existingjson = '{}'
+	if File.exists? filename do
+		existingjson = retrieveJSON(filename)
+	end
+	jsonfile = File.open(filename,'w')
+	#compare jsondata to existingjson
+	#and merge whatever is whatever
+	jsonfile.close
 end
 
 
@@ -112,6 +139,11 @@ end
 ################BEGIN ANALYTICS#################
 ################################################
 
+def analyzeTeamMatchInfo(matcheventname)
+	#JSON.parse
+	#.each do ||
+	#an array for each? sad boi
+end
 
 #Match scouting (send list of matches, alliances, teams)
 #Match scouting (receive match scout data)
