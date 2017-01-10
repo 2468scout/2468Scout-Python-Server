@@ -11,9 +11,10 @@ set :port, 8080   #DO NOT CHANGE without coordination w/client
 Dir.mkdir 'public' unless File.exists? 'public' #Sinatra will be weird otherwise
 Dir.mkdir 'public/data' unless File.exists? 'public/data' #Data is to be gitignored. The server will have to create a folder for itself.
 
-$server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
+$server = 'https://frc-staging-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
 $token = open('apitoken.txt').read #Auth token from installation
 
+#OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 def api(path) #Returns the FRC API file for the specified path in JSON format.
   begin
   	puts "I am accessing the API"
@@ -22,15 +23,16 @@ def api(path) #Returns the FRC API file for the specified path in JSON format.
       "Authorization" => "Basic #{$token}", #Standard procedure outlined by their API
       "accept" => "application/json" #We want JSON files, so we will ask for JSON
     ).read
-  rescue
+  rescue => e
   	puts "Something went wrong"
+  	puts e
     return '{}' #If error, return empty JSON-ish.
   end
 end
 
-$events = api('events/') #Get a list of events (competitions regionals etc) from FRC API
-
-
+$events = api('events/') #Get a list of events (competitions regionals etc) from FRC API #Actually I'm not sure
+$registrations = api('registrations') #"Registrations":[{"teamNumber":#,"Events":[EVENT CODES]}],"count":1
+puts $registrations
 ################################################
 #############BEGIN REQUEST HANDLING#############
 ################################################
@@ -46,12 +48,12 @@ end
 
 get '/getmatchlist:name' do #:name - event name parameter, Return all matches under event of :name
 	content_type :json
-	'{"test":"here is the matches"}'
+	'{"test":"Success"}'
 end
 
 get '/getteammatch' do #Return a JSON of match data for a particular team?? (idk.. Ian vult)
 	content_type :json
-	'{"test":"here is a team match"}'
+	'{"test":"Success"}'
 end
 
 ###POST REQUESTS
@@ -107,7 +109,7 @@ def saveTeamMatchInfo(eventcode="", matchnumber=0,teamnumber=0,jsondata='{}')
 	jsondata = JSON.parse(jsondata)
 	filename = eventcode+"_Match"+matchnumber+"_Team"+teamnumber+".json"
 	existingjson = '{}'
-	if File.exists? filename do
+	if File.exists? filename
 		existingjson = retrieveJSON(filename)
 	end
 	jsonfile = File.open(filename,'w')
@@ -125,7 +127,7 @@ def saveTeamPitInfo()
 	jsondata = JSON.parse(jsondata)
 	filename = eventcode+"_Pit_Team"+teamnumber+".json"
 	existingjson = '{}'
-	if File.exists? filename do
+	if File.exists? filename
 		existingjson = retrieveJSON(filename)
 	end
 	jsonfile = File.open(filename,'w')
