@@ -1,8 +1,11 @@
+#SSL_CERT_FILE=D:/ScoutAppServer/cacert.pem
+
 #Gems the server needs
 require 'sinatra' #Web server
 require 'json'    #Send & receive JSON data
 require 'open-uri'#Wrapper for Net::HTTP (interact with FRC API and client)
 require 'uri'     #Uniform Resource Identifiers (interact with FRC API and client)
+require 'openssl' #Not sure if we need this but we've been having some SSL awkwardness
 
 #Initialization stuff - shamelessly ripped from Isaac
 set :bind, '0.0.0.0'
@@ -15,6 +18,7 @@ $server = 'https://frc-staging-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'
 $token = open('apitoken.txt').read #Auth token from installation
 
 #OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
+
 def api(path) #Returns the FRC API file for the specified path in JSON format.
   begin
   	puts "I am accessing the API"
@@ -24,8 +28,7 @@ def api(path) #Returns the FRC API file for the specified path in JSON format.
       "accept" => "application/json" #We want JSON files, so we will ask for JSON
     ).read
   rescue => e
-  	puts "Something went wrong"
-  	puts e
+  	puts "Something went wrong #{e.class}, message is #{e.message}"
     return '{}' #If error, return empty JSON-ish.
   end
 end
@@ -52,6 +55,7 @@ get '/getmatchlist:name' do #:name - event name parameter, Return all matches un
 end
 
 get '/getteammatch' do #Return a JSON of match data for a particular team?? (idk.. Ian vult)
+	puts "I got a get request"
 	content_type :json
 	'{"test":"Success"}'
 end
