@@ -4,6 +4,16 @@ The entire bee movie script except every bee is replaced with useful data and an
 # CONTRIBUTORS
 Lauren Wang
 
+# GENERAL PLAN
+* Interaction with FRC API and basic get/post requests by week 1
+* Save and recall data by week 2
+* Sort data by week 3
+* Analyze data by week 4
+* Team requested features (graphs, timelines,) by week 5
+* Physical server, SSL cert by week 6
+* Force juniors to understand / be able to debug by week 7
+* PROFIT by week 8! :P
+
 # TO-DO
 * Receive JSON from Blue Alliance
 * Send JSON to Client (scout teams)

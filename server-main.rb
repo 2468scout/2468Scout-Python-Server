@@ -46,7 +46,7 @@ puts $events
 
 ###GET REQUESTS
 
-get '/events' do #Return a JSON of the events we got directly from the API, as well as an identifier
+get '/getevents' do #Return a JSON of the events we got directly from the API, as well as an identifier
 	content_type :json
  	$events
 end
@@ -114,19 +114,12 @@ end
 def saveTeamMatchInfo(eventcode="", matchnumber=0,teamnumber=0,jsondata='{}')
 	jsondata = JSON.parse(jsondata)
 	filename = eventcode+"_Match"+matchnumber+"_Team"+teamnumber+".json"
-	existingjson = '{}'
-	if File.exists? filename
-		existingjson = retrieveJSON(filename)
-	end
 	jsonfile = File.open(filename,'w')
-	#compare jsondata to existingjson
-	#p = includes position
-	#c = includes count
-	#https://docs.google.com/document/d/1R51aN8jQxovCz6G7pOAtSW9ZRAhzVhrsSbaVJhcE8u0/edit?usp=sharing
-	
+	jsonfile << jsondata
 	#array of all MatchEvent objects into file
 	jsonfile.close
 
+	#Possible extra task: compare existing json to saved json in case of double-saving
 end
 
 def saveTeamPitInfo()
