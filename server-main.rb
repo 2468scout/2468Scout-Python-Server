@@ -1,4 +1,4 @@
-#SSL_CERT_FILE=D:/ScoutAppServer/cacert.pem
+#set SSL_CERT_FILE=D:/ScoutAppServer/2468Scout-Python-Server/cacert.pem
 
 #Gems the server needs
 require 'sinatra' #Web server
@@ -14,7 +14,7 @@ set :port, 8080   #DO NOT CHANGE without coordination w/client
 Dir.mkdir 'public' unless File.exists? 'public' #Sinatra will be weird otherwise
 Dir.mkdir 'public/data' unless File.exists? 'public/data' #Data is to be gitignored. The server will have to create a folder for itself.
 
-$server = 'https://frc-staging-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
+$server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
 $token = open('apitoken.txt').read #Auth token from installation
 
 #OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
@@ -23,7 +23,7 @@ def api(path) #Returns the FRC API file for the specified path in JSON format.
   begin
   	puts "I am accessing the API"
     open("#{$server}#{path}", #https://frc-api. ... .org/v.2.0/ ... /the thing we want
-      #"User-Agent" => "https://github.com/2468scout/2468Scout-Ruby-Server", #Dunno what this is but Isaac did it
+      "User-Agent" => "https://github.com/2468scout/2468Scout-Ruby-Server", #Dunno what this is but Isaac did it
       "Authorization" => "Basic #{$token}", #Standard procedure outlined by their API
       "accept" => "application/json" #We want JSON files, so we will ask for JSON
     ).read
@@ -35,7 +35,9 @@ end
 
 $events = api('events/') #Get a list of events (competitions regionals etc) from FRC API #Actually I'm not sure
 $registrations = api('registrations') #"Registrations":[{"teamNumber":#,"Events":[EVENT CODES]}],"count":1
-puts $registrations
+puts $events
+
+
 ################################################
 #############BEGIN REQUEST HANDLING#############
 ################################################
