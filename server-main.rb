@@ -35,7 +35,13 @@ end
 
 $events = api('events/') #Get a list of events (competitions regionals etc) from FRC API #Actually I'm not sure
 $registrations = api('registrations') #"Registrations":[{"teamNumber":#,"Events":[EVENT CODES]}],"count":1
-puts $events
+
+#OPTIONAL PROJECT FOR LATER:
+#use eventcodes matrix to verify that a user-submitted event code is valid
+#$eventcodes = []
+#$events.each do |event|
+#	$eventcodes << event['code']
+#end
 
 
 ################################################

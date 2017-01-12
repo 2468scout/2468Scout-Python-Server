@@ -1,0 +1,165 @@
+ABCA : Western Canada Regional : Regional
+ALHU : Rocket City Regional : Regional
+ARCHIMEDES : FIRST Championship - St. Louis - Archimedes Subdivision : ChampionshipSubdivision
+ARDA : FIRST Championship - St. Louis - ARDA Division : ChampionshipDivision
+ARLI : Arkansas Rock City Regional : Regional
+AUSC : Southern Cross Regional : Regional
+AUSP : South Pacific Regional : Regional
+AZFL : Arizona North Regional : Regional
+AZPX : Arizona West Regional : Regional
+CADA : Sacramento Regional : Regional
+CAIR : Orange County Regional : Regional
+CALB : Los Angeles Regional : Regional
+CAMA : Central Valley Regional : Regional
+CANE : FIRST Championship - Houston - CANE Division : ChampionshipDivision
+CARSON : FIRST Championship - St. Louis - Carson Subdivision : ChampionshipSubdivision
+CARVER : FIRST Championship - Houston - Carver Subdivision : ChampionshipSubdivision
+CASD : San Diego Regional presented by Qualcomm : Regional
+CASF : San Francisco Regional : Regional
+CASJ : Silicon Valley Regional : Regional
+CATE : FIRST Championship - St. Louis - CATE Division : ChampionshipDivision
+CAVE : Ventura Regional : Regional
+CHCMP : FIRST Chesapeake District Championship : DistrictChampionship
+CMPMO : FIRST Championship - St. Louis : Championship
+CMPTX : FIRST Championship - Houston : Championship
+CODE : Colorado Regional : Regional
+CTHAR : NE District - Hartford Event : DistrictEvent
+CTWAT : NE District - Waterbury Event : DistrictEvent
+CUDA : FIRST Championship - St. Louis - CUDA Division : ChampionshipDivision
+CURIE : FIRST Championship - St. Louis - Curie Subdivision : ChampionshipSubdivision
+DALY : FIRST Championship - St. Louis - Daly Subdivision : ChampionshipSubdivision
+DARWIN : FIRST Championship - St. Louis - Darwin Subdivision : ChampionshipSubdivision
+FLOR : Orlando Regional : Regional
+FLWP : South Florida Regional  : Regional
+GAALB : PCH District - Albany Event : DistrictEvent
+GACMP : Peachtree State Championship : DistrictChampionship
+GACOL : PCH District - Columbus Event : DistrictEvent
+GADAL : PCH District - Dalton Event : DistrictEvent
+GAGAI : PCH District - Gainesville Event : DistrictEvent
+GALILEO : FIRST Championship - Houston - Galileo Subdivision : ChampionshipSubdivision
+GARO : FIRST Championship - Houston - GARO Division : ChampionshipDivision
+GUSH : Shenzhen Regional : Regional
+HIHO : Hawaii Regional : Regional
+HOPPER : FIRST Championship - Houston - Hopper Subdivision : ChampionshipSubdivision
+HOTU : FIRST Championship - Houston - HOTU Division : ChampionshipDivision
+IACF : Iowa Regional : Regional
+IDBO : Idaho Regional : Regional
+ILCH : Midwest Regional : Regional
+ILPE : Central Illinois Regional : Regional
+INCMP : Indiana State Championship : DistrictChampionship
+INMIS : IN District - St. Joseph Event : DistrictEvent
+INPMH : IN District - Perry Meridian Event : DistrictEvent
+INWLA : IN District - Tippecanoe Event : DistrictEvent
+ISCMP : FIRST Israel District Championship : DistrictChampionship
+ISDE1 : ISR District Event #1 : DistrictEvent
+ISDE2 : ISR District Event #2 : DistrictEvent
+ISDE3 : ISR District Event #3 : DistrictEvent
+ISDE4 : ISR District Event #4 : DistrictEvent
+LAKE : Bayou Regional : Regional
+MABOS : NE District - Greater Boston Event : DistrictEvent
+MABRI : NE District - SE Mass Event : DistrictEvent
+MAREA : NE District - North Shore Event : DistrictEvent
+MAWOR : NE District - Worcester Polytechnic Institute Event : DistrictEvent
+MDBET : CHS District - Greater DC Event : DistrictEvent
+MDEDG : CHS District - Central Maryland Event : DistrictEvent
+MDOWI : CHS District - Northern Maryland Event : DistrictEvent
+MELEW : NE District - Pine Tree Event : DistrictEvent
+MIANN : FIM District - Ann Arbor Pioneer Event : DistrictEvent
+MIBRO : FIM District - Woodhaven Event : DistrictEvent
+MICEN : FIM District - Center Line Event : DistrictEvent
+MICMP : Michigan State Championship - See Site Information : DistrictChampionship
+MIESC : FIM District - Escanaba Event : DistrictEvent
+MIGAY : FIM District - Gaylord Event : DistrictEvent
+MIGUL : FIM District - Gull Lake Event : DistrictEvent
+MIHOW : FIM District - Howell Event : DistrictEvent
+MIKE2 : FIM District - Kettering University Event #2 : DistrictEvent
+MIKEN : FIM District - East Kentwood Event : DistrictEvent
+MIKET : FIM District - Kettering University Event #1 : DistrictEvent
+MILAK : FIM District - Lakeview Event : DistrictEvent
+MILAN : FIM District - Lansing Event : DistrictEvent
+MILIV : FIM District - Livonia Event : DistrictEvent
+MILSU : FIM District - Lake Superior State University Event : DistrictEvent
+MIMAR : FIM District - Marysville Event : DistrictEvent
+MIMID : FIM District - Midland Event : DistrictEvent
+MISHE : FIM District - Shepherd Event : DistrictEvent
+MISJO : FIM District - St. Joseph Event : DistrictEvent
+MISOU : FIM District - Southfield Event : DistrictEvent
+MITRY : FIM District - Troy Event : DistrictEvent
+MITVC : FIM District - Traverse City Event : DistrictEvent
+MIWAT : FIM District - Waterford Event : DistrictEvent
+MIWMI : FIM District - West Michigan Event : DistrictEvent
+MNDU : Lake Superior Regional : Regional
+MNDU2 : Northern Lights Regional : Regional
+MNMI : Minnesota 10000 Lakes Regional : Regional
+MNMI2 : Minnesota North Star Regional : Regional
+MOKC : Greater Kansas City Regional : Regional
+MOSL : St. Louis Regional : Regional
+MRCMP : FIRST Mid-Atlantic District Championship sponsored by Johnson & Johnson : DistrictChampionship
+MXTL : Toluca Regional : Regional
+MXTO : Laguna Regional : Regional
+NCASH : NC District - UNC Asheville Event : DistrictEvent
+NCCMP : FIRST North Carolina State Championship : DistrictChampionship
+NCGRE : NC District - Greensboro Event : DistrictEvent
+NCRAL : NC District - Raleigh Event : DistrictEvent
+NCWIN : NC District - Pitt County Event : DistrictEvent
+NECMP : New England District Championship : DistrictChampionship
+NEWTON : FIRST Championship - Houston - Newton Subdivision : ChampionshipSubdivision
+NHBED : NE District - Southern NH Event : DistrictEvent
+NHGRS : NE District - Granite State Event : DistrictEvent
+NJBRI : MAR District - Bridgewater-Raritan Event : DistrictEvent
+NJFLA : MAR District - Mount Olive Event : DistrictEvent
+NJSKI : MAR District - Montgomery Event : DistrictEvent
+NJTAB : MAR District - Seneca Event : DistrictEvent
+NVLV : Las Vegas Regional : Regional
+NYLI : SBPLI Long Island Regional : Regional
+NYNY : New York City Regional : Regional
+NYRO : Finger Lakes Regional  : Regional
+NYSU : Hudson Valley Regional : Regional
+NYTR : New York Tech Valley Regional : Regional
+OHCL : Buckeye Regional : Regional
+OHSP : Miami Valley Regional : Regional
+OKOK : Oklahoma Regional  : Regional
+ONBAR : ONT District - Georgian College Event : DistrictEvent
+ONCMP : FIRST Ontario Provincial Championship : DistrictChampionship
+ONHAM : ONT District - McMaster University Event : DistrictEvent
+ONLON : ONT District - Western University, Engineering Event : DistrictEvent
+ONNOB : ONT District - North Bay Event : DistrictEvent
+ONOSH : ONT District - Durham College Event : DistrictEvent
+ONTO1 : ONT District - Ryerson University Event : DistrictEvent
+ONTO2 : ONT District - Victoria Park Collegiate Event : DistrictEvent
+ONWAT : ONT District - University of Waterloo Event : DistrictEvent
+ONWIN : ONT District - Windsor Essex Great Lakes Event : DistrictEvent
+ORLAK : PNW District - Lake Oswego Event : DistrictEvent
+ORORE : PNW District - Clackamas Academy of Industrial Science Event : DistrictEvent
+ORWIL : PNW District - Wilsonville Event : DistrictEvent
+PACA : Greater Pittsburgh Regional : Regional
+PAHAT : MAR District - Hatboro-Horsham Event : DistrictEvent
+PAPHI : MAR District - Springside Chestnut Hill Academy Event : DistrictEvent
+PAWCH : MAR District - Westtown Event : DistrictEvent
+PNCMP : Pacific Northwest District Championship : DistrictChampionship
+QCMO : Festival de Robotique - Montreal Regional : Regional
+RIPRO : NE District - Rhode Island Event : DistrictEvent
+ROEBLING : FIRST Championship - Houston - Roebling Subdivision : ChampionshipSubdivision
+SCMB : Palmetto Regional : Regional
+TESLA : FIRST Championship - St. Louis - Tesla Subdivision : ChampionshipSubdivision
+TNKN : Smoky Mountains Regional : Regional
+TURING : FIRST Championship - Houston - Turing Subdivision : ChampionshipSubdivision
+TXDA : Dallas Regional : Regional
+TXHO : Lone Star Central Regional : Regional
+TXLU : Hub City Regional : Regional
+TXSA : Alamo Regional : Regional
+TXWA : Brazos Valley Regional : Regional
+TXWO : Lone Star North Regional : Regional
+UTWV : Utah Regional : Regional
+VABLA : CHS District - Southwest Virginia Event : DistrictEvent
+VAGLE : CHS District - Central Virginia Event : DistrictEvent
+VAHAY : CHS District - Northern Virginia Event : DistrictEvent
+VAPOR : CHS District - Hampton Roads Event : DistrictEvent
+WAAHS : PNW District - Auburn Event : DistrictEvent
+WAAMV : PNW District - Auburn Mountainview Event : DistrictEvent
+WAELL : PNW District - Central Washington University Event : DistrictEvent
+WAMOU : PNW District - Mount Vernon Event : DistrictEvent
+WASNO : PNW District - Glacier Peak Event : DistrictEvent
+WASPO : PNW District - West Valley Event : DistrictEvent
+WILA : Seven Rivers Regional : Regional
+WIMI : Wisconsin Regional : Regional
