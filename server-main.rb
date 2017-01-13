@@ -21,7 +21,7 @@ $token = open('apitoken.txt').read #Auth token from installation
 
 def api(path) #Returns the FRC API file for the specified path in JSON format.
   begin
-  	puts "I am accessing the API"
+  	puts "I am accessing the API at path #{path}"
     open("#{$server}#{path}", #https://frc-api. ... .org/v.2.0/ ... /the thing we want
       "User-Agent" => "https://github.com/2468scout/2468Scout-Ruby-Server", #Dunno what this is but Isaac did it
       "Authorization" => "Basic #{$token}", #Standard procedure outlined by their API
@@ -34,7 +34,6 @@ def api(path) #Returns the FRC API file for the specified path in JSON format.
 end
 
 $events = api('events/') #Get a list of events (competitions regionals etc) from FRC API #Actually I'm not sure
-$registrations = api('registrations') #"Registrations":[{"teamNumber":#,"Events":[EVENT CODES]}],"count":1
 
 #OPTIONAL PROJECT FOR LATER:
 #use eventcodes matrix to verify that a user-submitted event code is valid
@@ -57,7 +56,24 @@ get '/getevents' do #Return a JSON of the events we got directly from the API, a
  	$events
 end
 
-get '/getmatchlist:name' do #:name - event name parameter, Return all matches under event of :name
+get '/getteamlist' do
+	tempoutput = []
+	tempeventcode = params[:eventcode]
+	tempjson = JSON.parse(api('registrations?eventCode=' + tempeventcode))
+	
+	tempjson['Registrations'].each do |registration|
+		tempoutput << registration['teamNumber']
+	end	
+	
+	tempoutput = tempoutput.map do |teannumber|
+		{teamnumber: teannumber.to_i}
+	end
+	
+	content_type :json
+	tempoutput.to_json
+end
+
+get '/getmatchlist' do
 	content_type :json
 	'{"test":"Success"}'
 end
