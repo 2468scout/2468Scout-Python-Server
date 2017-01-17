@@ -1,4 +1,4 @@
-#set SSL_CERT_FILE=D:/ScoutAppServer/2468Scout-Python-Server/cacert.pem
+#set SSL_CERT_FILE=D:/ScoutAppServer/2468Scout-Python-Server/human/cacert.pem
 
 #Gems the server needs
 require 'sinatra' #Web server
@@ -15,7 +15,7 @@ Dir.mkdir 'public' unless File.exists? 'public' #Sinatra will be weird otherwise
 Dir.mkdir 'public/data' unless File.exists? 'public/data' #Data is to be gitignored. The server will have to create a folder for itself.
 
 $server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
-$token = open('apitoken.txt').read #Auth token from installation
+$token = open('human/apitoken.txt').read #Auth token from installation
 
 #OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
@@ -57,20 +57,16 @@ get '/getevents' do #Return a JSON of the events we got directly from the API, a
 end
 
 get '/getteamlist' do
-	tempoutput = []
+	output = []
 	tempeventcode = params[:eventcode]
-	tempjson = JSON.parse(api('registrations?eventCode=' + tempeventcode))
+	tempeventcode = eventcodee
+	tempjson = JSON.parse(api('teams?eventCode=' + tempeventcode))
 	
-	tempjson['Registrations'].each do |registration|
-		tempoutput << registration['teamNumber']
+	tempjson['teams'].each do |team|
+		output << {iTeamNumber: team['teamNumber'].to_i, sTeamName: team['nameShort']}.to_h
 	end	
-	
-	tempoutput = tempoutput.map do |teannumber|
-		{teamnumber: teannumber.to_i}
-	end
-	
 	content_type :json
-	tempoutput.to_json
+	output.to_json
 end
 
 get '/getmatchlist' do
@@ -137,10 +133,8 @@ def saveTeamMatchInfo(eventcode="", matchnumber=0,teamnumber=0,jsondata='{}')
 	jsondata = JSON.parse(jsondata)
 	filename = eventcode+"_Match"+matchnumber+"_Team"+teamnumber+".json"
 	jsonfile = File.open(filename,'w')
-	jsonfile << jsondata
-	#array of all MatchEvent objects into file
+	jsonfile << jsondata #array of all MatchEvent objects into file. maybe?
 	jsonfile.close
-
 	#Possible extra task: compare existing json to saved json in case of double-saving
 end
 
