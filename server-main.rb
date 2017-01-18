@@ -1,5 +1,19 @@
 #set SSL_CERT_FILE=D:/ScoutAppServer/2468Scout-Python-Server/human/cacert.pem
 
+################################################
+################TABLE OF CONTENTS###############
+################################################
+# Initialization
+# Class Definition
+# Request Handling
+# Number Crunching
+# Analytics
+
+
+################################################
+##############BEGIN INITIALIZATION##############
+################################################
+
 #Gems the server needs
 require 'sinatra' #Web server
 require 'json'    #Send & receive JSON data
@@ -7,8 +21,7 @@ require 'open-uri'#Wrapper for Net::HTTP (interact with FRC API and client)
 require 'uri'     #Uniform Resource Identifiers (interact with FRC API and client)
 require 'openssl' #Not sure if we need this but we've been having some SSL awkwardness
 
-#Initialization stuff - shamelessly ripped from Isaac
-set :bind, '0.0.0.0'
+set :bind, '0.0.0.0' #localhost
 set :port, 8080   #DO NOT CHANGE without coordination w/client
 
 Dir.mkdir 'public' unless File.exists? 'public' #Sinatra will be weird otherwise
@@ -33,7 +46,7 @@ def api(path) #Returns the FRC API file for the specified path in JSON format.
   end
 end
 
-$events = api('events/') #Get a list of events (competitions regionals etc) from FRC API #Actually I'm not sure
+$events = api('events/') #Get all the events from the API so we don't have to keep bothering them
 
 #OPTIONAL PROJECT FOR LATER:
 #use eventcodes matrix to verify that a user-submitted event code is valid
@@ -47,23 +60,95 @@ $events = api('events/') #Get a list of events (competitions regionals etc) from
 #############BEGIN CLASS DEFINITION#############
 ################################################
 
-Class FRCEvent
-	#ian made this
-	#ignore for now
-  @sEventName = ''
-  @sEventCode = ''
-  @teamNameList = []
-  @teamMatchList = []
-  @matchList = []
-  @listNamesByTeamMatch = []
-  Def initialize(eventName, eventCode, tNameList, tMatchList, mList, namesByMatchList)
-    @sEventName = eventName
-    @sEventCode = eventCode
-    @teamNameList = tNameList
-    @teamMatchList = tMatchList
-    @matchList = mList
-    @listNamesByTeamMatch = namesByMatchList
+Class FRCEvent #one for each event
+	@sEventName = '' #the long name of the event
+	@sEventCode = '' #the event code
+	@teamNameList = [] #array of all teams attending
+	@teamMatchList = [] #array of all TeamMatch objects, 6 per match
+	@matchList = [] #array of all Match objects containing score, rp, some sht
+	def initialize(eventName, eventCode, tNameList, tMatchList, mList, namesByMatchList)
+		@sEventName = eventName
+		@sEventCode = eventCode
+		@teamNameList = tNameList
+		@teamMatchList = tMatchList
+		@matchList = mList
+		@listNamesByTeamMatch = namesByMatchList
   end
+end
+
+Class Match #one for each match in an event
+	@iMatchNumber = -1 #match ID
+	@iRedScore = -1 #points earned by red (from API)
+	@iBlueScore = -1 #points earned by blue (from API)
+	@iRedRankingPoints = -1 #ranking points earned by red (from API)
+	@iBlueRankingPoints = -1 #ranking points earned by blue (from API)
+	@sCompetitionLevel = '' #the event.. level??? ffs thats a different api call entirely
+	@sEventCode = '' #the event code
+	@teamMatchList = [] #array of 6 TeamMatch objects
+	def initialize(matchNum, redMP, blueMP, redRP, blueRP, complevel, eventCode, tMatchList)
+		@iMatchNumber = matchNum
+		@iRedScore = redMP
+		@iBlueScore = blueMP
+		@iRedRankingPoints = redRP
+		@iBlueRankingPoints = blueRP
+		@sCompetitionLevel = complevel
+		@sEventCode = eventCode
+		@teamMatchList = tMatchList
+	end
+end
+
+Class Team #one for each team .. ever
+	@sTeamName = ''
+	@iTeamNumber = -1
+	@awardsList = []
+	@avgGearsPerMatch = -1
+	@avgHighFuelPerMatch = -1
+	@avgLowFuelPerMatch = -1
+	@avgRankingPoints = -1
+	def initialize(teamName, teamNum, awardsArray, gearspermatch, highpermatch, lowpermatch, avgrp)
+		@sTeamName = teamName
+		@iTeamNumber = teamNum
+		@awardsList = awardsArray
+		@avgGearsPerMatch = gearspermatch
+		@avgHighFuelPerMatch = highpermatch
+		@avgLowFuelPerMatch = lowpermatch
+		@avgRankingPoints = avgrp
+	end
+end
+
+Class MatchEvent #many per match
+	@iTimeStamp = -1 #how much time
+	@iPointValue = -1 #how many point earned
+	@iCount = -1 #how many time
+	@bInAutonomous #happened in autonomous yes/no
+	@sEventName #wtf why do we need an event name for every single piece of a match
+	@loc #Point object
+	def initialize(timStamp, pointVal, cnt, isauto, eventname, location)
+		@iTimeStamp = timStamp
+		@iPointValue = pointVal
+		@iCount = cnt
+		@bInAutonomous = isauto
+		@sEventName = eventName
+		@loc = location
+	end
+end
+
+Class Point
+	@x = 0
+	@y = 0
+	def initialize(myx, myy)
+		@x = myx
+		@y = myy
+	end
+end
+
+Class SimpleTeam
+	@sTeamName = ''
+	@iTeamNumber = -1
+	def intialize(teamname, teamnumber)
+		@sTeamName = teamName
+		@iTeamNumber = teamnumber
+	end
 end
 
 
