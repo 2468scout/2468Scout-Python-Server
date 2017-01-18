@@ -44,6 +44,30 @@ $events = api('events/') #Get a list of events (competitions regionals etc) from
 
 
 ################################################
+#############BEGIN CLASS DEFINITION#############
+################################################
+
+Class FRCEvent
+	#ian made this
+	#ignore for now
+  @sEventName = ''
+  @sEventCode = ''
+  @teamNameList = []
+  @teamMatchList = []
+  @matchList = []
+  @listNamesByTeamMatch = []
+  Def initialize(eventName, eventCode, tNameList, tMatchList, mList, namesByMatchList)
+    @sEventName = eventName
+    @sEventCode = eventCode
+    @teamNameList = tNameList
+    @teamMatchList = tMatchList
+    @matchList = mList
+    @listNamesByTeamMatch = namesByMatchList
+  end
+end
+
+
+################################################
 #############BEGIN REQUEST HANDLING#############
 ################################################
 #GET - Client requests data from a specified resource
@@ -59,7 +83,6 @@ end
 get '/getteamlist' do
 	output = []
 	tempeventcode = params[:eventcode]
-	tempeventcode = eventcodee
 	tempjson = JSON.parse(api('teams?eventCode=' + tempeventcode))
 	
 	tempjson['teams'].each do |team|
@@ -131,24 +154,25 @@ end
 
 def saveTeamMatchInfo(eventcode="", matchnumber=0,teamnumber=0,jsondata='{}')
 	jsondata = JSON.parse(jsondata)
-	filename = eventcode+"_Match"+matchnumber+"_Team"+teamnumber+".json"
+	filename = "public/data/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata #array of all MatchEvent objects into file. maybe?
 	jsonfile.close
 	#Possible extra task: compare existing json to saved json in case of double-saving
+	puts "Successfully saved " + filename
 end
 
-def saveTeamPitInfo()
+def saveTeamPitInfo(jsondata)
 	jsondata = JSON.parse(jsondata)
-	filename = eventcode+"_Pit_Team"+teamnumber+".json"
+	filename = "public/data/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json"
 	existingjson = '{}'
-	if File.exists? filename
-		existingjson = retrieveJSON(filename)
-	end
+	#if File.exists? filename
+	#	existingjson = retrieveJSON(filename)
+	#end
 	jsonfile = File.open(filename,'w')
-	#compare jsondata to existingjson
-	#and merge whatever is whatever
+	jsonfile << jsondata
 	jsonfile.close
+	puts "Successfully saved " + filename
 end
 
 
