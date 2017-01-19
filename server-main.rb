@@ -14,7 +14,7 @@
 ##############BEGIN INITIALIZATION##############
 ################################################
 
-#Gems the server needs
+#Gems (imports) the server needs
 require 'sinatra' #Web server
 require 'json'    #Send & receive JSON data
 require 'open-uri'#Wrapper for Net::HTTP (interact with FRC API and client)
@@ -29,6 +29,7 @@ Dir.mkdir 'public/data' unless File.exists? 'public/data' #Data is to be gitigno
 
 $server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
 $token = open('human/apitoken.txt').read #Auth token from installation
+$requests = {} #Requests from our server to the API
 
 #OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
@@ -46,7 +47,25 @@ def api(path) #Returns the FRC API file for the specified path in JSON format.
   end
 end
 
-$events = api('events/') #Get all the events from the API so we don't have to keep bothering them
+def reqapi(path) #Make sure we don't ask for the same thing too often
+	begin
+    	req = path
+    	if $requests[req] && ($requests[req][:time] + 120 > Time.now.to_f) 
+    	  $requests[req][:data] #we requested the same thing within 2 minutes
+    	else
+    	  $requests[req] = {
+    	    data: api(req),
+    	    time: Time.now.to_f
+    	  }
+    	  $requests[req][:data] #new request so we make a new one and return its data
+    	end
+  	rescue
+    	#status 404
+    	return '{}'
+  	end
+end
+
+$events = reqapi('events/') #Get all the events from the API so we don't have to keep bothering them
 
 #OPTIONAL PROJECT FOR LATER:
 #use eventcodes matrix to verify that a user-submitted event code is valid
@@ -60,51 +79,38 @@ $events = api('events/') #Get all the events from the API so we don't have to ke
 #############BEGIN CLASS DEFINITION#############
 ################################################
 
-Class FRCEvent #one for each event
-	@sEventName = '' #the long name of the event
-	@sEventCode = '' #the event code
-	@teamNameList = [] #array of all teams attending
-	@teamMatchList = [] #array of all TeamMatch objects, 6 per match
-	@matchList = [] #array of all Match objects containing score, rp, some sht
+class FRCEvent #one for each event
 	def initialize(eventName, eventCode, tNameList, tMatchList, mList, namesByMatchList)
-		@sEventName = eventName
-		@sEventCode = eventCode
-		@teamNameList = tNameList
-		@teamMatchList = tMatchList
-		@matchList = mList
+		@sEventName = eventName #the long name of the event
+		@sEventCode = eventCode #the event code
+		@teamNameList = tNameList #array of all teams attending
+		@teamMatchList = tMatchList #array of all TeamMatch objects, 6 per match
+		@matchList = mList #array of all Match objects containing score, rp, some sht
 		@listNamesByTeamMatch = namesByMatchList
-  end
-end
-
-Class Match #one for each match in an event
-	@iMatchNumber = -1 #match ID
-	@iRedScore = -1 #points earned by red (from API)
-	@iBlueScore = -1 #points earned by blue (from API)
-	@iRedRankingPoints = -1 #ranking points earned by red (from API)
-	@iBlueRankingPoints = -1 #ranking points earned by blue (from API)
-	@sCompetitionLevel = '' #the event.. level??? ffs thats a different api call entirely
-	@sEventCode = '' #the event code
-	@teamMatchList = [] #array of 6 TeamMatch objects
-	def initialize(matchNum, redMP, blueMP, redRP, blueRP, complevel, eventCode, tMatchList)
-		@iMatchNumber = matchNum
-		@iRedScore = redMP
-		@iBlueScore = blueMP
-		@iRedRankingPoints = redRP
-		@iBlueRankingPoints = blueRP
-		@sCompetitionLevel = complevel
-		@sEventCode = eventCode
-		@teamMatchList = tMatchList
+	end
+	def to_json
+		{'sEventName' => @sEventName, 'sEventCode' => @sEventCode, 'teamNameList' => @teamNameList, 'teamMatchList' => @teamMatchList, 'matchList' => @matchList, 'listNamesByTeamMatch' => @listNamesByTeamMatch}
 	end
 end
 
-Class Team #one for each team .. ever
-	@sTeamName = ''
-	@iTeamNumber = -1
-	@awardsList = []
-	@avgGearsPerMatch = -1
-	@avgHighFuelPerMatch = -1
-	@avgLowFuelPerMatch = -1
-	@avgRankingPoints = -1
+class Match #one for each match in an event
+	#ian wants us to check scores for every single match in the API every 5 minutes... that's gonna be a (very) low-priority task
+	def initialize(matchNum, redMP, blueMP, redRP, blueRP, complevel, eventCode, tMatchList)
+		@iMatchNumber = matchNum #match ID
+		@iRedScore = redMP #points earned by red (from API)
+		@iBlueScore = blueMP #points earned by blue (from API)
+		@iRedRankingPoints = redRP #ranking points earned by red (from API)
+		@iBlueRankingPoints = blueRP #ranking points earned by blue (from API)
+		@sCompetitionLevel = complevel #the event.. level??? ffs thats a different api call entirely
+		@sEventCode = eventCode #the event code
+		@teamMatchList = tMatchList #array of 6 TeamMatch objects
+	end
+	def to_json
+		{'iMatchNumber' => @iMatchNumber, 'iRedScore' => @iRedScore, 'iBlueScore' => @iBlueScore, 'iRedRankingPoints' => @iRedRankingPoints, 'iBlueRankingPoints' => @iBlueRankingPoints, 'sCompetitionLevel' => @sCompetitionLevel, 'sEventCode' => @sEventCode, 'teamMatchList' => @teamMatchList}
+	end
+end
+
+class Team #one for each team .. ever
 	def initialize(teamName, teamNum, awardsArray, gearspermatch, highpermatch, lowpermatch, avgrp)
 		@sTeamName = teamName
 		@iTeamNumber = teamNum
@@ -114,40 +120,42 @@ Class Team #one for each team .. ever
 		@avgLowFuelPerMatch = lowpermatch
 		@avgRankingPoints = avgrp
 	end
-end
-
-Class MatchEvent #many per match
-	@iTimeStamp = -1 #how much time
-	@iPointValue = -1 #how many point earned
-	@iCount = -1 #how many time
-	@bInAutonomous #happened in autonomous yes/no
-	@sEventName #wtf why do we need an event name for every single piece of a match
-	@loc #Point object
-	def initialize(timStamp, pointVal, cnt, isauto, eventname, location)
-		@iTimeStamp = timStamp
-		@iPointValue = pointVal
-		@iCount = cnt
-		@bInAutonomous = isauto
-		@sEventName = eventName
-		@loc = location
+	def to_json
+		{'sTeamName' => @sTeamName, 'iTeamNumber' => @iTeamNumber, 'awardsList' => @awardsList, 'avgGearsPerMatch' => @avgGearsPerMatch, 'avgHighFuelPerMatch' => @avgHighFuelPerMatch, 'avgLowFuelPerMatch' => @avgLowFuelPerMatch, 'avgRankingPoints' => @avgRankingPoints}.to_json
 	end
 end
 
-Class Point
-	@x = 0
-	@y = 0
+class MatchEvent #many per match
+	def initialize(timStamp, pointVal, cnt, isauto, eventname, location)
+		@iTimeStamp = timStamp #how much time
+		@iPointValue = pointVal #how many point earned
+		@iCount = cnt #how many time
+		@bInAutonomous = isauto #happened in autonomous yes/no
+		@sEventName = eventName #wtf why do we need an event name for every single piece of a match
+		@loc = location #Point object
+	end
+	def to_json
+		{'iTimeStamp' => @iTimeStamp, 'iPointValue' => @iPointValue, 'iCount' => @iCount, 'bInAutonomous' => @bInAutonomous, 'sEventName' => @sEventName, 'loc' => @loc}.to_json
+	end
+end
+
+class Point
 	def initialize(myx, myy)
 		@x = myx
 		@y = myy
 	end
+	def to_json
+		{'x' => @x, 'y' => @y}.to_json
+	end
 end
 
-Class SimpleTeam
-	@sTeamName = ''
-	@iTeamNumber = -1
-	def intialize(teamname, teamnumber)
-		@sTeamName = teamName
+class SimpleTeam
+	def initialize(teamname, teamnumber)
+		@sTeamName = teamname
 		@iTeamNumber = teamnumber
+	end
+	def to_json
+		{'sTeamName' => @sTeamName, 'iTeamNumber' => @iTeamNumber}.to_json
 	end
 end
 
@@ -157,6 +165,7 @@ end
 ################################################
 #GET - Client requests data from a specified resource
 #POST - Client submits data to be processed to a specified resource
+#request.body - where the JSON things are
 
 ###GET REQUESTS
 
@@ -165,13 +174,12 @@ get '/getevents' do #Return a JSON of the events we got directly from the API, a
  	$events
 end
 
-get '/getteamlist' do
+get '/getsimpleteamlist' do
 	output = []
-	tempeventcode = params[:eventcode]
-	tempjson = JSON.parse(api('teams?eventCode=' + tempeventcode))
-	
+	tempeventcode = params['eventCode']
+	tempjson = JSON.parse(reqapi('teams?eventCode=' + tempeventcode))
 	tempjson['teams'].each do |team|
-		output << {iTeamNumber: team['teamNumber'].to_i, sTeamName: team['nameShort']}.to_h
+		output << SimpleTeam.new(team['nameShort'].to_s,team['teamNumber'].to_i).to_json
 	end	
 	content_type :json
 	output.to_json
@@ -182,10 +190,20 @@ get '/getmatchlist' do
 	'{"test":"Success"}'
 end
 
-get '/getteammatch' do #Return a JSON of match data for a particular team?? (idk.. Ian vult)
+get '/getTeamMatch' do #Return a JSON of match data for a particular team?? (idk.. Ian vult)
 	puts "I got a get request"
-	content_type :json
-	'{"test":"Success"}'
+	begin
+		content_type :json
+		eventcode = params['eventCode']
+		teamnumber = params['teamNumber']
+		matchnumber = params['matchNumber']
+		filename = "public/data/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
+		retrieveJSON(filename)
+	rescue => e
+		puts e
+		status 400
+		return '{}'
+	end	
 end
 
 ###POST REQUESTS
@@ -202,11 +220,9 @@ post '/postpit' do #Pit scouting (receive team data) #input is an actual string
 	end
 end
 
-post '/postteammatch' do #Team scouting (recieve team and match data) #input is an actual string
+post '/postTeamMatch' do #eventcode, teamnuber, matchnumber, all matchevents
 	begin
-		testvar = params['test']
-  		puts testvar
-  		#saveTeamMatchInfo(eventcode,matchnumber,teamnumber,jsondata)
+  		saveTeamMatchInfo(request.body)
   		#EXPERIMENTAL: saveMatchInfo(??) for simulations
 		status 200
 	rescue => e
@@ -237,8 +253,11 @@ def retrieveJSON(filename) #return JSON of a file to make it available for rewri
 	JSON.parse(content)
 end
 
-def saveTeamMatchInfo(eventcode="", matchnumber=0,teamnumber=0,jsondata='{}')
+def saveTeamMatchInfo(jsondata)
 	jsondata = JSON.parse(jsondata)
+	eventcode = jsondata['sEventCode']
+	teamnumber = jsondata['iTeamNumber']
+	matchnumber = jsondata['iMatchNumber']
 	filename = "public/data/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata #array of all MatchEvent objects into file. maybe?
