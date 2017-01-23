@@ -30,6 +30,7 @@ Dir.mkdir 'public/data' unless File.exists? 'public/data' #Data is to be gitigno
 $server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
 $token = open('human/apitoken.txt').read #Auth token from installation
 $requests = {} #Requests from our server to the API
+$events = {} #Event objects we've used
 
 #OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
@@ -169,20 +170,15 @@ end
 
 ###GET REQUESTS
 
-get '/getevents' do #Return a JSON of the events we got directly from the API, as well as an identifier
+get '/getEvents' do #Return a JSON of the events we got directly from the API, as well as an identifier
 	content_type :json
  	$events
 end
 
-get '/getsimpleteamlist' do
-	output = []
+get '/getSimpleTeamList' do
 	tempeventcode = params['eventCode']
-	tempjson = JSON.parse(reqapi('teams?eventCode=' + tempeventcode))
-	tempjson['teams'].each do |team|
-		output << SimpleTeam.new(team['nameShort'].to_s,team['teamNumber'].to_i).to_json
-	end	
 	content_type :json
-	output.to_json
+	getSimpleTeamList(tempeventcode)
 end
 
 get '/getmatchlist' do
@@ -236,6 +232,11 @@ end
 #############BEGIN NUMBER CRUNCHING#############
 ################################################
 
+#Filename format:
+#Eventcode_Objecttype_Teamnum.json
+#Objecttype: Pit, TeamMatch, Match
+#Teamnum: The word "Team" followed by team number
+
 ##Helpful stuff##
 #params['param']
 #JSON.parse
@@ -243,7 +244,7 @@ end
 #File.open('public/data/_____','r' or 'w')
 #File.close
 
-def retrieveJSON(filename) #return JSON of a file to make it available for rewrite
+def retrieveJSON(filename) #return JSON of a file
 	txtfile = File.open(filename,'r')
 	content = ''
 	txtfile.each do |line|
@@ -258,7 +259,7 @@ def saveTeamMatchInfo(jsondata)
 	eventcode = jsondata['sEventCode']
 	teamnumber = jsondata['iTeamNumber']
 	matchnumber = jsondata['iMatchNumber']
-	filename = "public/data/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
+	filename = "public/data/"+eventcode+"_TeamMatch"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata #array of all MatchEvent objects into file. maybe?
 	jsonfile.close
@@ -268,8 +269,10 @@ end
 
 def saveTeamPitInfo(jsondata)
 	jsondata = JSON.parse(jsondata)
+	eventcode = jsondata['sEventCode']
+	teamnumber = jsondata['iTeamNumber']
 	filename = "public/data/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json"
-	existingjson = '{}'
+	#existingjson = '{}'
 	#if File.exists? filename
 	#	existingjson = retrieveJSON(filename)
 	#end
@@ -279,6 +282,14 @@ def saveTeamPitInfo(jsondata)
 	puts "Successfully saved " + filename
 end
 
+def getSimpleTeamList(eventcode)
+	output = []
+	tempjson = JSON.parse(reqapi('teams?eventCode=' + eventcode))
+	tempjson['teams'].each do |team|
+		output << SimpleTeam.new(team['nameShort'].to_s,team['teamNumber'].to_i).to_json
+	end	
+	output.to_json
+end
 
 ################################################
 ################BEGIN ANALYTICS#################
@@ -290,8 +301,29 @@ def analyzeTeamMatchInfo(matcheventname)
 	#an array for each? sad boi
 end
 
+def analyzeTeamAtEvent(teamnumber, eventcode)
+	filenames = []
+	Dir.glob("public/data/"+eventcode+"*Team"+teamnumber.to_s+".json") do |filename|
+		filenames << filename #Names of all relevant data files
+	end
+	if filenames.size #If it isn't empty
+		
+	end
+end
+
 #Match scouting (send list of matches, alliances, teams)
 #Match scouting (receive match scout data)
 #Analytics home (send relevant statistics)
 #Analytics specific (send specific statistics)
 #Team profile (send statistics for a given team, AS WELL AS relevant matches)
+
+#dummy inputs for testing
+#saveTeamPitInfo({'sEventCode' => 'TXDA', 'iTeamNumber' => 2468, 'data' => 'This is a broken robot!'}.to_json)
+#saveTeamMatchInfo({'sEventCode' => 'TXSA', 'iTeamNumber' => 2468, 'iMatchNumber' => 10, 'data' => 'This team scored low!'}.to_json)
+#saveTeamMatchInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'iMatchNumber' => 3, 'data' => 'This team scored high!'}.to_json)
+#saveTeamMatchInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'iMatchNumber' => 40, 'data' => 'This team broke down!'}.to_json)
+#saveTeamPitInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'data' => 'This is a cool robot!'}.to_json)
+#analyzeTeamAtEvent(2468,'CASJ')
+#should create 5 files
+#but only 3 of them are data from the CASJ event! gasp!
+#analyzeTeamAtEvent should look at only these 3 files
