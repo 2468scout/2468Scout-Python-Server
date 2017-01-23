@@ -30,7 +30,8 @@ Dir.mkdir 'public/data' unless File.exists? 'public/data' #Data is to be gitigno
 $server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
 $token = open('human/apitoken.txt').read #Auth token from installation
 $requests = {} #Requests from our server to the API
-$events = {} #Event objects we've used
+$events = {} #All events this season, from API
+
 
 #OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
@@ -68,6 +69,7 @@ end
 
 $events = reqapi('events/') #Get all the events from the API so we don't have to keep bothering them
 
+
 #OPTIONAL PROJECT FOR LATER:
 #use eventcodes matrix to verify that a user-submitted event code is valid
 #$eventcodes = []
@@ -79,6 +81,10 @@ $events = reqapi('events/') #Get all the events from the API so we don't have to
 ################################################
 #############BEGIN CLASS DEFINITION#############
 ################################################
+
+#FRCEvent will be sent to the client.
+#TeamMatch will be received from the client.
+#We should have a separate class, variable, or file for event analytical data to be easily accessed.
 
 class FRCEvent #one for each event
 	def initialize(eventName, eventCode, tNameList, tMatchList, mList, namesByMatchList)
@@ -95,7 +101,7 @@ class FRCEvent #one for each event
 end
 
 class Match #one for each match in an event
-	#ian wants us to check scores for every single match in the API every 5 minutes... that's gonna be a (very) low-priority task
+	#Match contains all data for a match, including scores for analytics purposes.
 	def initialize(matchNum, redMP, blueMP, redRP, blueRP, complevel, eventCode, tMatchList)
 		@iMatchNumber = matchNum #match ID
 		@iRedScore = redMP #points earned by red (from API)
@@ -110,6 +116,20 @@ class Match #one for each match in an event
 		{'iMatchNumber' => @iMatchNumber, 'iRedScore' => @iRedScore, 'iBlueScore' => @iBlueScore, 'iRedRankingPoints' => @iRedRankingPoints, 'iBlueRankingPoints' => @iBlueRankingPoints, 'sCompetitionLevel' => @sCompetitionLevel, 'sEventCode' => @sEventCode, 'teamMatchList' => @teamMatchList}
 	end
 end
+
+class MatchData #one for each match in an event
+	#MatchData contains data needed for scouting a match.
+	def initialize(matchNum, complevel, eventCode, tMatchList)
+		@iMatchNumber = matchNum #match ID
+		@sCompetitionLevel = complevel #the event.. level??? ffs thats a different api call entirely
+		@sEventCode = eventCode #the event code
+		@teamMatchList = tMatchList #array of 6 TeamMatch objects
+	end
+	def to_json
+		{'iMatchNumber' => @iMatchNumber, 'sCompetitionLevel' => @sCompetitionLevel, 'sEventCode' => @sEventCode, 'teamMatchList' => @teamMatchList}
+	end
+end
+
 
 class Team #one for each team .. ever
 	def initialize(teamName, teamNum, awardsArray, gearspermatch, highpermatch, lowpermatch, avgrp)
@@ -181,7 +201,7 @@ get '/getSimpleTeamList' do
 	getSimpleTeamList(tempeventcode)
 end
 
-get '/getmatchlist' do
+get '/getMatchList' do
 	content_type :json
 	'{"test":"Success"}'
 end
@@ -295,10 +315,11 @@ end
 ################BEGIN ANALYTICS#################
 ################################################
 
-def analyzeTeamMatchInfo(matcheventname)
-	#JSON.parse
-	#.each do ||
-	#an array for each? sad boi
+$rawscores = []
+
+def updateScores(eventcode)
+	#reqapi for the matches of an event
+	#useful for winrates, scores, RP, rankings
 end
 
 def analyzeTeamAtEvent(teamnumber, eventcode)
@@ -306,10 +327,19 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	Dir.glob("public/data/"+eventcode+"*Team"+teamnumber.to_s+".json") do |filename|
 		filenames << filename #Names of all relevant data files
 	end
-	if filenames.size #If it isn't empty
-		
+	if filenames.size #If the number of relevant files is not 0
+		#combine similar json objects into arrays
 	end
+	#aside from files - we also need the scores, rankings, etc. from the API
+	
 end
+
+def analyzeTeamMatchInfo(matcheventname)
+	#JSON.parse
+	#.each do ||
+	#an array for each? sad boi
+end
+
 
 #Match scouting (send list of matches, alliances, teams)
 #Match scouting (receive match scout data)

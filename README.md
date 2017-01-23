@@ -15,11 +15,11 @@ Lauren Wang
 * PROFIT by week 8! :P
 
 # TO-DO
-* Receive JSON from Blue Alliance
+* Receive JSON from FRC API
 * Send JSON to Client (scout teams)
- * Team numbers each alliance
+ * Event object
 * Receive JSON from Client (scout teams)
- * Depends on Ian
+ * TeamMatch object
 * Sort Teams
  * Corresponding Matches
  * Previous Partners/Opponents
