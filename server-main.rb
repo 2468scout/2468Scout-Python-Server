@@ -1,16 +1,6 @@
 #set SSL_CERT_FILE=D:/ScoutAppServer/2468Scout-Python-Server/human/cacert.pem
 
 ################################################
-################TABLE OF CONTENTS###############
-################################################
-# Initialization
-# Class Definition
-# Request Handling
-# Number Crunching
-# Analytics
-
-
-################################################
 ##############BEGIN INITIALIZATION##############
 ################################################
 
@@ -69,9 +59,6 @@ end
 
 $events = reqapi('events/') #Get all the events from the API so we don't have to keep bothering them
 
-
-#OPTIONAL PROJECT FOR LATER:
-#use eventcodes matrix to verify that a user-submitted event code is valid
 #$eventcodes = []
 #$events.each do |event|
 #	$eventcodes << event['code']
@@ -186,7 +173,6 @@ end
 ################################################
 #GET - Client requests data from a specified resource
 #POST - Client submits data to be processed to a specified resource
-#request.body - where the JSON things are
 
 ###GET REQUESTS
 
@@ -257,13 +243,6 @@ end
 #Objecttype: Pit, TeamMatch, Match
 #Teamnum: The word "Team" followed by team number
 
-##Helpful stuff##
-#params['param']
-#JSON.parse
-#to_json
-#File.open('public/data/_____','r' or 'w')
-#File.close
-
 def retrieveJSON(filename) #return JSON of a file
 	txtfile = File.open(filename,'r')
 	content = ''
@@ -323,12 +302,30 @@ def updateScores(eventcode)
 end
 
 def analyzeTeamAtEvent(teamnumber, eventcode)
-	filenames = []
-	Dir.glob("public/data/"+eventcode+"*Team"+teamnumber.to_s+".json") do |filename|
-		filenames << filename #Names of all relevant data files
+	filenames = [] #Names of all relevant files
+	pitfilenames = [] #Files for pit scouting
+	teammatchfilenames = [] #Files for match scouting
+	
+	matchevents = []
+	matchnums = []
+	scores = []
+
+	Dir.glob("public/data/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json") do |filename|
+		filenames << filename
+		pitfilenames << filename
+	end
+	Dir.glob("public/data/"+eventcode+"_TeamMatch*_Team"+teamnumber.to_s+".json") do |filename|
+		filenames << filename
+		teammatchfilenames << filename
 	end
 	if filenames.size #If the number of relevant files is not 0
 		#combine similar json objects into arrays
+		if pitfilenames.size
+			#combine pit stuff (client-dependent)
+		end
+		if teammatchfilenames.size
+
+		end
 	end
 	#aside from files - we also need the scores, rankings, etc. from the API
 	
@@ -339,13 +336,6 @@ def analyzeTeamMatchInfo(matcheventname)
 	#.each do ||
 	#an array for each? sad boi
 end
-
-
-#Match scouting (send list of matches, alliances, teams)
-#Match scouting (receive match scout data)
-#Analytics home (send relevant statistics)
-#Analytics specific (send specific statistics)
-#Team profile (send statistics for a given team, AS WELL AS relevant matches)
 
 #dummy inputs for testing
 #saveTeamPitInfo({'sEventCode' => 'TXDA', 'iTeamNumber' => 2468, 'data' => 'This is a broken robot!'}.to_json)
