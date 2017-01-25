@@ -13,6 +13,7 @@ require 'openssl' #Not sure if we need this but we've been having some SSL awkwa
 
 set :bind, '0.0.0.0' #localhost
 set :port, 8080   #DO NOT CHANGE without coordination w/client
+enable :lock #One request processed at a time
 
 Dir.mkdir 'public' unless File.exists? 'public' #Sinatra will be weird otherwise
 Dir.mkdir 'public/data' unless File.exists? 'public/data' #Data is to be gitignored. The server will have to create a folder for itself.
@@ -85,6 +86,11 @@ class FRCEvent #one for each event
 	def to_json
 		{'sEventName' => @sEventName, 'sEventCode' => @sEventCode, 'teamNameList' => @teamNameList, 'teamMatchList' => @teamMatchList, 'matchList' => @matchList, 'listNamesByTeamMatch' => @listNamesByTeamMatch}
 	end
+end
+
+def initializeFRCEventObject(jsondata)
+	#jsondata = JSON.parse(jsondata)
+	#FRCEvent.new(jsondata['sEventName'],)
 end
 
 class Match #one for each match in an event
@@ -193,7 +199,6 @@ get '/getMatchList' do
 end
 
 get '/getTeamMatch' do #Return a JSON of match data for a particular team?? (idk.. Ian vult)
-	puts "I got a get request"
 	begin
 		content_type :json
 		eventcode = params['eventCode']
@@ -206,6 +211,10 @@ get '/getTeamMatch' do #Return a JSON of match data for a particular team?? (idk
 		status 400
 		return '{}'
 	end	
+end
+
+get '/getTeamAnalytics' do
+
 end
 
 ###POST REQUESTS
@@ -224,11 +233,23 @@ end
 
 post '/postTeamMatch' do #eventcode, teamnuber, matchnumber, all matchevents
 	begin
-  		saveTeamMatchInfo(request.body)
+  		saveTeamMatchInfo(request.body.string)
   		#EXPERIMENTAL: saveMatchInfo(??) for simulations
 		status 200
 	rescue => e
-		puts e
+		puts "OOPS I GOT AN ERROR"
+		puts e.message
+		status 400
+	end
+end
+
+post '/postTeamImage' do
+	begin
+		teamnum = params['iTeamNumber']
+		eventcode = params['sEventCode']
+		#HOW DO I HANDLE IMAGES
+		status 200
+	rescue
 		status 400
 	end
 end
@@ -327,8 +348,11 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 
 		end
 	end
+	puts filenames.size.to_s + ' files found'
 	#aside from files - we also need the scores, rankings, etc. from the API
 	
+	{"filesFound" => filenames}.to_json
+	#{'matchEvents' => matchevents}.to_json
 end
 
 def analyzeTeamMatchInfo(matcheventname)
