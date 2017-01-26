@@ -305,6 +305,8 @@ def saveTeamMatchInfo(jsondata)
 	jsonfile.close
 	#Possible extra task: compare existing json to saved json in case of double-saving
 	puts "Successfully saved " + filename
+
+	analyzeTeamAtEvent(teamnumber, eventcode)
 end
 
 def saveTeamPitInfo(jsondata)
