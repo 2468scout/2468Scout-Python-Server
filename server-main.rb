@@ -267,7 +267,7 @@ class TeamMatch
 	def initialize(hash)
 		hash.each do |key, value|
 			if value.is_a?(hash)
-				value = new list 
+				value = new Hashit(value);
 			end
 			self.instance_variable_set("@#{key}", value);
 		end
