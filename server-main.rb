@@ -5,11 +5,15 @@
 ################################################
 
 #Gems (imports) the server needs
+require 'rubygems'#All of the gems in one, supposedly :thinking:
 require 'sinatra' #Web server
 require 'json'    #Send & receive JSON data
 require 'open-uri'#Wrapper for Net::HTTP (interact with FRC API and client)
 require 'uri'     #Uniform Resource Identifiers (interact with FRC API and client)
 require 'openssl' #Not sure if we need this but we've been having some SSL awkwardness
+require 'ostruct' #Turn JSON into instant objects! Huzzah!
+
+#bundle install
 
 set :bind, '0.0.0.0' #localhost
 set :port, 8080   #DO NOT CHANGE without coordination w/client
@@ -73,6 +77,14 @@ $events = reqapi('events/') #Get all the events from the API so we don't have to
 #FRCEvent will be sent to the client.
 #TeamMatch will be received from the client.
 #We should have a separate class, variable, or file for event analytical data to be easily accessed.
+
+class Hashit
+	def initialize(hash)
+		hash.each do |key, value|
+
+		end
+	end
+end
 
 class FRCEvent #one for each event
 	def initialize(eventName, eventCode, tNameList, tMatchList, mList, namesByMatchList)
@@ -360,6 +372,7 @@ def analyzeTeamMatchInfo(matcheventname)
 	#.each do ||
 	#an array for each? sad boi
 end
+
 
 #dummy inputs for testing
 #saveTeamPitInfo({'sEventCode' => 'TXDA', 'iTeamNumber' => 2468, 'data' => 'This is a broken robot!'}.to_json)
