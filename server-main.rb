@@ -20,7 +20,15 @@ set :port, 8080   #DO NOT CHANGE without coordination w/client
 enable :lock #One request processed at a time
 
 Dir.mkdir 'public' unless File.exists? 'public' #Sinatra will be weird otherwise
-Dir.mkdir 'public/data' unless File.exists? 'public/data' #Data is to be gitignored. The server will have to create a folder for itself.
+
+#Data is to be gitignored. The server will have to create a folder for itself.
+#Alternatively, gitignore the entire public directory- works much better. (Also gitignores all of these subdirectories)
+
+Dir.mkdir 'public/Matches' unless File.exists? 'public/Matches'
+Dir.mkdir 'public/Teams' unless File.exists? 'public/Teams'
+Dir.mkdir 'public/TeamMatches' unless File.exists? 'public/TeamMatches'
+Dir.mkdir 'public/Events' unless File.exists? 'public/Events' 
+
 
 $server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
 $token = open('human/apitoken.txt').read #Auth token from installation
