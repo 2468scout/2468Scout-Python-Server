@@ -299,7 +299,7 @@ def saveTeamMatchInfo(jsondata)
 	eventcode = jsondata['sEventCode']
 	teamnumber = jsondata['iTeamNumber']
 	matchnumber = jsondata['iMatchNumber']
-	filename = "public/data/"+eventcode+"_TeamMatch"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
+	filename = "public/TeamMatches/"+eventcode+"_TeamMatch"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata #array of all MatchEvent objects into file. maybe?
 	jsonfile.close
@@ -311,7 +311,7 @@ def saveTeamPitInfo(jsondata)
 	jsondata = JSON.parse(jsondata)
 	eventcode = jsondata['sEventCode']
 	teamnumber = jsondata['iTeamNumber']
-	filename = "public/data/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json"
+	filename = "public/Teams/"+teamNumber.to_s+"/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json"
 	#existingjson = '{}'
 	#if File.exists? filename
 	#	existingjson = retrieveJSON(filename)
@@ -351,11 +351,11 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	matchnums = []
 	scores = []
 
-	Dir.glob("public/data/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json") do |filename|
+	Dir.glob("public/Teams/"+teamNumber.to_s+"/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json") do |filename|
 		filenames << filename
 		pitfilenames << filename
 	end
-	Dir.glob("public/data/"+eventcode+"_TeamMatch*_Team"+teamnumber.to_s+".json") do |filename|
+	Dir.glob("public/TeamMatches/"+eventcode+"_TeamMatch*_Team"+teamnumber.to_s+".json") do |filename|
 		filenames << filename
 		teammatchfilenames << filename
 	end
