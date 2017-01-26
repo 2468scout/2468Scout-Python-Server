@@ -78,9 +78,9 @@ $events = reqapi('events/') #Get all the events from the API so we don't have to
 #end
 
 
-################################################
-#############BEGIN CLASS DEFINITION#############
-################################################
+##################################################
+############# BEGIN CLASS DEFINITION #############
+##################################################
 
 #FRCEvent will be sent to the client.
 #TeamMatch will be received from the client.
@@ -125,6 +125,9 @@ class Match #one for each match in an event
 		@sEventCode = eventCode #the event code
 		@teamMatchList = tMatchList #array of 6 TeamMatch objects
 	end
+	def initialize(hash)
+		hash.each do |key, value|
+			self.instance_variable_set("@#{key}", value);
 	def to_json
 		{'iMatchNumber' => @iMatchNumber, 'iRedScore' => @iRedScore, 'iBlueScore' => @iBlueScore, 'iRedRankingPoints' => @iRedRankingPoints, 'iBlueRankingPoints' => @iBlueRankingPoints, 'sCompetitionLevel' => @sCompetitionLevel, 'sEventCode' => @sEventCode, 'teamMatchList' => @teamMatchList}
 	end
