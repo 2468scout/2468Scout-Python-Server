@@ -13,6 +13,7 @@ require 'uri'     #Uniform Resource Identifiers (interact with FRC API and clien
 require 'openssl' #Not sure if we need this but we've been having some SSL awkwardness
 require 'ostruct' #Turn JSON into instant objects! Huzzah!
 
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 #bundle install
 
 set :bind, '0.0.0.0' #localhost
@@ -58,24 +59,28 @@ def reqapi(path) #Make sure we don't ask for the same thing too often
     	if $requests[req] && ($requests[req][:time] + 120 > Time.now.to_f) 
     	  $requests[req][:data] #we requested the same thing within 2 minutes
     	else
-    	  $requests[req] = {
-    	    data: api(req),
-    	    time: Time.now.to_f
-    	  }
-    	  $requests[req][:data] #new request so we make a new one and return its data
+    		$requests[req] = {
+    	    	data: api(req),
+    	    	time: Time.now.to_f
+    	  	}
+    	  	$requests[req][:data] #new request so we make a new one and return its data
     	end
   	rescue
     	#status 404
+		puts("Status 404")
     	return '{}'
   	end
 end
 
-
-$events = JSON.parse(reqapi('events/')) #Get all the events from the API so we don't have to keep bothering them
+puts("Starting up!")
+eventsString = reqapi('events/')
+puts("Results from FRCAPI events list: " + eventsString)
+$events = JSON.parse(eventsString) #Get all the events from the API so we don't have to keep bothering them
 
 $frcEvents = []
 $eventcodes = []
 $events.each do |event|
+	puts("Looping through events...")
 	$eventcodes << event['code']
 	if(event['code'] == "CMPTX" || event['code'] == "CASJ" || event['code'] == "TXDA" || event['code'] == "TXLU" )
 		frcEvents << FRCEvent.new(event['name'], event['code'], nil, nil, nil)
