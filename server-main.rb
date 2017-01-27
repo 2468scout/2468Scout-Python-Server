@@ -74,14 +74,10 @@ end
 
 puts("Starting up!")
 eventsString = reqapi('events/')
-puts("Results from FRCAPI events list: " + eventsString)
+#puts("Results from FRCAPI events list: " + eventsString)
 $events = JSON.parse(eventsString) #Get all the events from the API so we don't have to keep bothering them
-
-$frcEvents = []
-$eventcodes = []
-$events.each do |event|
-	puts("Looping through events...")
-	$eventcodes << event['code']
+@frcEvents = []
+$events["Events"].each do |event|
 	if(event['code'] == "CMPTX" || event['code'] == "CASJ" || event['code'] == "TXDA" || event['code'] == "TXLU" )
 		frcEvents << FRCEvent.new(event['name'], event['code'], nil, nil, nil)
 	end
