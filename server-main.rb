@@ -12,7 +12,7 @@ require 'open-uri'#Wrapper for Net::HTTP (interact with FRC API and client)
 require 'uri'     #Uniform Resource Identifiers (interact with FRC API and client)
 require 'openssl' #Not sure if we need this but we've been having some SSL awkwardness
 require 'ostruct' #Turn JSON into instant objects! Huzzah!
-
+require_relative 'server-classes.rb'
 OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 #bundle install
 
@@ -35,7 +35,6 @@ $server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Prov
 $token = open('human/apitoken.txt').read #Auth token from installation
 $requests = {} #Requests from our server to the API
 $events = {} #All events this season, from API
-
 
 #OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
@@ -76,226 +75,36 @@ puts("Starting up!")
 eventsString = reqapi('events/')
 #puts("Results from FRCAPI events list: " + eventsString)
 $events = JSON.parse(eventsString) #Get all the events from the API so we don't have to keep bothering them
-@frcEvents = []
+$frcEvents = []
 $events["Events"].each do |event|
 	if(event['code'] == "CMPTX" || event['code'] == "CASJ" || event['code'] == "TXDA" || event['code'] == "TXLU" )
-		frcEvents << FRCEvent.new(event['name'], event['code'], nil, nil, nil)
+		tempEvent = FRCEvent.new(event['name'], event['code'])
+		$frcEvents << tempEvent
 	end
 end
+puts($frcEvents.empty?)
 
 $frcEvents.each do |frcevent|
-	recievedEvent = JSON.parse(reqapi('2017/schedule/#{frcevent.sEventCode}?tournamentLevel=qual'))
+	recievedEvent = {}
+	recievedEvent = JSON.parse(reqapi('2017/schedule/' + frcevent.sEventCode + '?tournamentLevel=qual'))
 	frcevent.matchList = []
-	recievedEvent['Schedule'].each do |match|
-		tempMatch = Match.new(match['matchNumber'], nil, nil, nil, nil, "qual", nil)
-		tempMatch.teamMatchList = []
-		match['Teams'].each do |team|
-			tempMatch.teamMatchList << TeamMatch.new(team['number'], match['matchNumber'], 
-			/\d+/.match(team['station']).try(:[], 0), #I have literally no idea what this does, but it should work lol
-			nil, nil, frcevent.sEventCode, nil, team['station'][0] == "B", nil)
+	if !recievedEvent.empty?
+		recievedEvent['Schedule'].each do |match|
+			tempMatch = Match.new(match['matchNumber'], nil, nil, nil, nil, "qual", nil)
+			tempMatch.teamMatchList = []
+			match['Teams'].each do |team|
+				tempMatch.teamMatchList << TeamMatch.new(team['number'], match['matchNumber'], 
+				/\d+/.match(team['station']).try(:[], 0), #I have literally no idea what this does, but it should work lol
+				nil, nil, frcevent.sEventCode, nil, team['station'][0] == "B", nil)
+			end
+			frcevent.matchList << tempMatch
 		end
-		frcevent.matchList << tempMatch
 	end
 end
-
+saveEventsData
 
 #Need to find the following specific events: CMPTX, CASJ, TXDA, TXLU
 
-
-##################################################
-############# BEGIN CLASS DEFINITION #############
-##################################################
-
-#FRCEvent will be sent to the client.
-#TeamMatch will be received from the client.
-#We should have a separate class, variable, or file for event analytical data to be easily accessed.
-
-class Hashit
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
-end
-
-class FRCEvent #one for each event
-	def initialize(eventName, eventCode, tNameList, tMatchList, mList)
-		@sEventName = eventName #the long name of the event
-		@sEventCode = eventCode #the event code
-		@teamNameList = tNameList #array of all teams attending
-		@teamMatchList = tMatchList #array of all TeamMatch objects, 6 per match
-		@matchList = mList #array of all Match objects containing match number,
-	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
-	def to_json
-		{'sEventName' => @sEventName, 'sEventCode' => @sEventCode, 'teamNameList' => @teamNameList, 'teamMatchList' => @teamMatchList, 'matchList' => @matchList, 'listNamesByTeamMatch' => @listNamesByTeamMatch}
-	end
-end
-
-def initializeFRCEventObject(jsondata)
-	#jsondata = JSON.parse(jsondata)
-	#FRCEvent.new(jsondata['sEventName'],)
-end
-
-class Match #one for each match in an event
-	#Match contains all data for a match, including scores for analytics purposes.
-	def initialize(matchNum, redMP, blueMP, redRP, blueRP, complevel, eventCode, tMatchList)
-		@iMatchNumber = matchNum #match ID
-		@iRedScore = redMP #points earned by red (from API)
-		@iBlueScore = blueMP #points earned by blue (from API)
-		@iRedRankingPoints = redRP #ranking points earned by red (from API)
-		@iBlueRankingPoints = blueRP #ranking points earned by blue (from API)
-		@sCompetitionLevel = complevel #the event.. level??? ffs thats a different api call entirely
-		@sEventCode = eventCode #the event code
-		@teamMatchList = tMatchList #array of 6 TeamMatch objects
-	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
-	def to_json
-		{'iMatchNumber' => @iMatchNumber, 'iRedScore' => @iRedScore, 'iBlueScore' => @iBlueScore, 'iRedRankingPoints' => @iRedRankingPoints, 'iBlueRankingPoints' => @iBlueRankingPoints, 'sCompetitionLevel' => @sCompetitionLevel, 'sEventCode' => @sEventCode, 'teamMatchList' => @teamMatchList}
-	end
-end
-
-class MatchData #one for each match in an event
-	#MatchData contains data needed for scouting a match.
-	def initialize(matchNum, complevel, eventCode, tMatchList)
-		@iMatchNumber = matchNum #match ID
-		@sCompetitionLevel = complevel #the event.. level??? ffs thats a different api call entirely
-		@sEventCode = eventCode #the event code
-		@teamMatchList = tMatchList #array of 6 TeamMatch objects
-	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
-	def to_json
-		{'iMatchNumber' => @iMatchNumber, 'sCompetitionLevel' => @sCompetitionLevel, 'sEventCode' => @sEventCode, 'teamMatchList' => @teamMatchList}
-	end
-end
-
-
-class Team #one for each team .. ever
-	def initialize(teamName, teamNum, awardsArray, gearspermatch, highpermatch, lowpermatch, avgrp)
-		@sTeamName = teamName
-		@iTeamNumber = teamNum
-		@awardsList = awardsArray
-		@avgGearsPerMatch = gearspermatch
-		@avgHighFuelPerMatch = highpermatch
-		@avgLowFuelPerMatch = lowpermatch
-		@avgRankingPoints = avgrp
-	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
-	def to_json
-		{'sTeamName' => @sTeamName, 'iTeamNumber' => @iTeamNumber, 'awardsList' => @awardsList, 'avgGearsPerMatch' => @avgGearsPerMatch, 'avgHighFuelPerMatch' => @avgHighFuelPerMatch, 'avgLowFuelPerMatch' => @avgLowFuelPerMatch, 'avgRankingPoints' => @avgRankingPoints}.to_json
-	end
-end
-
-class MatchEvent #many per TeamMatch
-	def initialize(timStamp, pointVal, cnt, isauto, eventname, location)
-		@iTimeStamp = timStamp #how much time
-		@iPointValue = pointVal #how many point earned
-		@iCount = cnt #how many time
-		@bInAutonomous = isauto #happened in autonomous yes/no
-		@sEventName = eventName #wtf why do we need an event name for every single piece of a match
-		@loc = location #Point object
-	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
-	def to_json
-		{'iTimeStamp' => @iTimeStamp, 'iPointValue' => @iPointValue, 'iCount' => @iCount, 'bInAutonomous' => @bInAutonomous, 'sEventName' => @sEventName, 'loc' => @loc}.to_json
-	end
-end
-
-class Point
-	def initialize(myx, myy)
-		@x = myx
-		@y = myy
-	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
-	def to_json
-		{'x' => @x, 'y' => @y}.to_json
-	end
-end
-
-class SimpleTeam
-	def initialize(teamname, teamnumber)
-		@sTeamName = teamname
-		@iTeamNumber = teamnumber
-	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
-	def to_json
-		{'sTeamName' => @sTeamName, 'iTeamNumber' => @iTeamNumber}.to_json
-	end
-end
-
-class TeamMatch
-	def initalize(teamNumber, matchNumber, numberInAlliance, allianceNumber, notes, eventCode, personScouting, color, listMatchEvents)
-		@iTeamNumber = teamNumber
-		@iMatchNumber = matchNumber
-		@iStationNumber = numberInAlliance
-		@iAllianceNumber = allianceNumber
-		@sNotes = notes
-		@sEventCode = eventCode
-		@sPersonScouting = personScouting
-		@bColor = color #Blue is True
-		@matchEventList = listMatchEvents
-	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value);
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
-end
 ################################################
 #############BEGIN REQUEST HANDLING#############
 ################################################
