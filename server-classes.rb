@@ -196,3 +196,169 @@ class TeamMatch
 		end
 	end
 end
+
+################################################
+#############BEGIN NUMBER CRUNCHING#############
+################################################
+
+#Filename format:
+#Eventcode_Objecttype_Teamnum.json
+#Objecttype: Pit, TeamMatch, Match
+#Teamnum: The word "Team" followed by team number
+
+def retrieveJSON(filename) #return JSON of a file
+	txtfile = File.open(filename,'r')
+	content = ''
+	txtfile.each do |line|
+		content << line
+	end
+	txtfile.close
+	JSON.parse(content)
+end
+def saveEventsData
+	$frcEvents.each do |event|
+		filename = "/public/Events/" + event.eventCode + ".json"
+		jsonfile = File.open(filename,'w')
+		jsonfile << event.to_json
+		jsonfile.close
+		puts "Successfully saved " + filename
+	end
+end
+
+def saveTeamMatchInfo(jsondata)
+	jsondata = JSON.parse(jsondata)
+	eventcode = jsondata['sEventCode']
+	teamnumber = jsondata['iTeamNumber']
+	matchnumber = jsondata['iMatchNumber']
+	filename = "public/TeamMatches/"+eventcode+"_TeamMatch"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
+	jsonfile = File.open(filename,'w')
+	jsonfile << jsondata #array of all MatchEvent objects into file. maybe?
+	jsonfile.close
+	#Possible extra task: compare existing json to saved json in case of double-saving
+	puts "Successfully saved " + filename
+
+	analyzeTeamAtEvent(teamnumber, eventcode)
+end
+
+def saveTeamPitInfo(jsondata)
+	jsondata = JSON.parse(jsondata)
+	eventcode = jsondata['sEventCode']
+	teamnumber = jsondata['iTeamNumber']
+	filename = "public/Teams/"+teamNumber.to_s+"/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json"
+	#existingjson = '{}'
+	#if File.exists? filename
+	#	existingjson = retrieveJSON(filename)
+	#end
+	jsonfile = File.open(filename,'w')
+	jsonfile << jsondata
+	jsonfile.close
+	puts "Successfully saved " + filename
+end
+
+def getSimpleTeamList(eventcode)
+	output = []
+	tempjson = JSON.parse(reqapi('teams?eventCode=' + eventcode))
+	tempjson['teams'].each do |team|
+		output << SimpleTeam.new(team['nameShort'].to_s,team['teamNumber'].to_i).to_json
+	end	
+	output.to_json
+end
+
+################################################
+################BEGIN ANALYTICS#################
+################################################
+
+$rawscores = {}
+#{CASJ: [], ABCA: [], etc, add as needed?}
+#initialize from the event file?
+#alternatively, have one global variable to control what event is preloaded (NOT RECOMMENDED)
+
+def updateEventFromAPI(eventcode,lastmodified)
+	#reqapi for all the latest data
+	#first check if-modified-since (I do not know where to get lastmodified atm)
+	#then overwrite all data, in case a correction was made, as it's all the same call anyway
+	#finally, return a success/failure message
+end
+
+def updateScores(eventcode)
+	#reqapi for the matches of an event
+	#useful for winrates, scores, RP, rankings
+end
+
+def analyzeTeamAtEvent(teamnumber, eventcode)
+	filenames = [] #Names of all relevant files
+	pitfilenames = [] #Files for pit scouting
+	teammatchfilenames = [] #Files for match scouting
+	
+	matchevents = []
+	matchnums = []
+	scores = []
+
+	Dir.glob("public/Teams/"+teamNumber.to_s+"/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json") do |filename|
+		filenames << filename
+		pitfilenames << filename
+	end
+	Dir.glob("public/TeamMatches/"+eventcode+"_TeamMatch*_Team"+teamnumber.to_s+".json") do |filename|
+		filenames << filename
+		teammatchfilenames << filename
+	end
+	if filenames.size #If the number of relevant files is not 0
+		#combine similar json objects into arrays
+		if pitfilenames.size #If there are pit files
+			pitfilenames.each do |filename| #Go through the files
+				tempjson = retrieveJSON(filename) #Convert them to json
+				#combine pit stuff (client-dependent)
+				#until we know what is being scouted from the pit, ignore this for now
+			end #end pitfilenames foreach
+		end #end if pitfilenames.size
+		if teammatchfilenames.size #If there are match files
+			teammatchfilenames.each do |filename| #Go through the files
+				tempjson = retrieveJSON(filename) #Convert them to json
+				if tempjson['matchEvents'] #If this json has a list of match events
+					tempjson['matchEvents'].each do |matchevent| #Go through the match events
+						matchevents << matchevent #Add the matchevents to an array of team's match events
+					end #end matchevents foreach
+				end #end if tempjson['mathEvents']
+				if tempjson['iMatchNumber'] #If this json has a match number
+					matchnums << tempjson['iMatchNumber'] #Add the matchnumber to an array of team's matchnums
+				end #end if tempjson['iMatchNumber']
+			end #end teammatchfilenames foreach
+		end #end if teammatchfilenames.size
+	end #end if filenames.size
+
+	sortedevents = sortMatchEvents(matchevents)
+	#Call the specific methods
+
+	puts filenames.size.to_s + ' files found'
+	
+	#API Call goes here
+
+	{"filesFound" => filenames}.to_json
+	#{'matchEvents' => matchevents}.to_json
+end
+
+def analyzeTeamInMatch(teamnum, matchnum, eventname)
+	#specific match-by-match, instead of hollistic
+end
+
+def sortMatchEvents(matchevents = [])
+	#receive an array of match events
+	#return an array of arrays of match events
+	#sort using sMatchEventName
+	sortedevents = [[],[]]
+	sortedevents
+	#sortedevents[0] : highFuelStart, highFuelStop matchevents
+	#etc
+end
+
+def analyzeHighGoals(highfuelevents = [])
+	#receive an array of relevant match events
+	#return an array of analytics
+	analyzed = [[],[]]
+	analyzed
+	#analyzed[0] : attempted per teleop
+	#analyzed[1] : accuracy per teleop
+	#analyzed[2] : attempted per autonomous
+	#analyzed[3] : accuracy in autonomous
+	#analyzed[4] : score earned per match from high goals
+end
