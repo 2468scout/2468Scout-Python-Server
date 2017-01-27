@@ -28,7 +28,7 @@ Dir.mkdir 'public/Matches' unless File.exists? 'public/Matches'
 Dir.mkdir 'public/Teams' unless File.exists? 'public/Teams'
 Dir.mkdir 'public/TeamMatches' unless File.exists? 'public/TeamMatches'
 Dir.mkdir 'public/Events' unless File.exists? 'public/Events' 
-
+Dir.mkdir 'apidata' unless File.exists? 'apidata'
 
 $server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
 $token = open('human/apitoken.txt').read #Auth token from installation
@@ -70,12 +70,35 @@ def reqapi(path) #Make sure we don't ask for the same thing too often
   	end
 end
 
-$events = reqapi('events/') #Get all the events from the API so we don't have to keep bothering them
 
-#$eventcodes = []
-#$events.each do |event|
-#	$eventcodes << event['code']
-#end
+$events = JSON.parse(reqapi('events/')) #Get all the events from the API so we don't have to keep bothering them
+
+$frcEvents = []
+$eventcodes = []
+$events.each do |event|
+	$eventcodes << event['code']
+	if(event['code'] == "CMPTX" || event['code'] == "CASJ" || event['code'] == "TXDA" || event['code'] == "TXLU" )
+		frcEvents << FRCEvent.new(event['name'], event['code'], nil, nil, nil)
+	end
+end
+
+$frcEvents.each do |frcevent|
+	recievedEvent = JSON.parse(reqapi('2017/schedule/#{frcevent.sEventCode}?tournamentLevel=qual'))
+	frcevent.matchList = []
+	recievedEvent['Schedule'].each do |match|
+		tempMatch = Match.new(match['matchNumber'], nil, nil, nil, nil, "qual", nil)
+		tempMatch.teamMatchList = []
+		match['Teams'].each do |team|
+			tempMatch.teamMatchList << TeamMatch.new(team['number'], match['matchNumber'], 
+			/\d+/.match(team['station']).try(:[], 0), #I have literally no idea what this does, but it should work lol
+			nil, nil, frcevent.sEventCode, nil, team['station'][0] == "B", nil)
+		end
+		frcevent.matchList << tempMatch
+	end
+end
+
+
+#Need to find the following specific events: CMPTX, CASJ, TXDA, TXLU
 
 
 ##################################################
@@ -98,13 +121,12 @@ class Hashit
 end
 
 class FRCEvent #one for each event
-	def initialize(eventName, eventCode, tNameList, tMatchList, mList, namesByMatchList)
+	def initialize(eventName, eventCode, tNameList, tMatchList, mList)
 		@sEventName = eventName #the long name of the event
 		@sEventCode = eventCode #the event code
 		@teamNameList = tNameList #array of all teams attending
 		@teamMatchList = tMatchList #array of all TeamMatch objects, 6 per match
-		@matchList = mList #array of all Match objects containing score, rp, some sht
-		@listNamesByTeamMatch = namesByMatchList
+		@matchList = mList #array of all Match objects containing match number,
 	end
 	def initialize(hash)
 		hash.each do |key, value|
@@ -256,7 +278,7 @@ class TeamMatch
 	def initalize(teamNumber, matchNumber, numberInAlliance, allianceNumber, notes, eventCode, personScouting, color, listMatchEvents)
 		@iTeamNumber = teamNumber
 		@iMatchNumber = matchNumber
-		@iNumberInAlliance = numberInAlliance
+		@iStationNumber = numberInAlliance
 		@iAllianceNumber = allianceNumber
 		@sNotes = notes
 		@sEventCode = eventCode
@@ -332,7 +354,7 @@ end
 
 post '/postTeamMatch' do #eventcode, teamnuber, matchnumber, all matchevents
 	begin
-  		saveTeamMatchInfo(request.body.string)
+  		saveTeamMatchInfo(params['obj'])
   		#EXPERIMENTAL: saveMatchInfo(??) for simulations
 		status 200
 	rescue => e
@@ -371,6 +393,15 @@ def retrieveJSON(filename) #return JSON of a file
 	end
 	txtfile.close
 	JSON.parse(content)
+end
+def saveEventsData
+	$frcEvents.each do |event|
+		filename = "/public/Events/" + event.eventCode + ".json"
+		jsonfile = File.open(filename,'w')
+		jsonfile << event.to_json
+		jsonfile.close
+		puts "Successfully saved " + filename
+	end
 end
 
 def saveTeamMatchInfo(jsondata)
