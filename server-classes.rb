@@ -59,17 +59,18 @@ class Match #one for each match in an event
 		@sEventCode = eventCode #the event code
 		@teamMatchList = tMatchList #array of 6 TeamMatch objects
 	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
+#	def initialize(hash)
+#		hash.each do |key, value|
+#			if value.is_a?(hash)
+#				value = new Hashit(value)
+#			end
+#			self.instance_variable_set("@#{key}", value);
+#		end
+#	end
 	def to_json
 		{'iMatchNumber' => @iMatchNumber, 'iRedScore' => @iRedScore, 'iBlueScore' => @iBlueScore, 'iRedRankingPoints' => @iRedRankingPoints, 'iBlueRankingPoints' => @iBlueRankingPoints, 'sCompetitionLevel' => @sCompetitionLevel, 'sEventCode' => @sEventCode, 'teamMatchList' => @teamMatchList}
 	end
+    attr_accessor :iMatchNumber, :iRedScore, :iBlueScore, :iRedRankingPoints, :iBlueRankingPoints, :sCompetitionLevel, :sEventCode, :teamMatchList
 end
 
 class MatchData #one for each match in an event
@@ -215,8 +216,8 @@ def retrieveJSON(filename) #return JSON of a file
 	txtfile.close
 	JSON.parse(content)
 end
-def saveEventsData
-	$frcEvents.each do |event|
+def saveEventsData (frcEvents)
+	frcEvents.each do |event|
 		filename = "/public/Events/" + event.eventCode + ".json"
 		jsonfile = File.open(filename,'w')
 		jsonfile << event.to_json

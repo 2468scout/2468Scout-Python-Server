@@ -101,7 +101,7 @@ $frcEvents.each do |frcevent|
 		end
 	end
 end
-saveEventsData
+saveEventsData($frcEvents)
 
 #Need to find the following specific events: CMPTX, CASJ, TXDA, TXLU
 
