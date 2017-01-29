@@ -35,7 +35,11 @@ class FRCEvent #one for each event
 #			self.instance_variable_set("@#{key}", value);
 #		end
 #	end
-	attr_accessor :sEventName, :sEventCode, :teamNameList,:teamMatchList, :matchList
+	attr_accessor :sEventName
+    attr_accessor :sEventCode
+    attr_accessor :teamNameList
+    attr_accessor :teamMatchList
+    attr_accessor :matchList
 	def to_json
 		{'sEventName' => @sEventName, 'sEventCode' => @sEventCode, 'teamNameList' => @teamNameList, 'teamMatchList' => @teamMatchList, 'matchList' => @matchList, 'listNamesByTeamMatch' => @listNamesByTeamMatch}
 	end
@@ -218,8 +222,14 @@ def retrieveJSON(filename) #return JSON of a file
 end
 def saveEventsData (frcEvents)
 	frcEvents.each do |event|
-		filename = "/public/Events/" + event.eventCode + ".json"
-		jsonfile = File.open(filename,'w')
+		filename = "public/Events/" + event.sEventCode + ".json"
+        if(File.exists? filename)
+            puts("Yeah, that file totally exists!")
+            jsonfile = File.open(filename)
+        else
+            puts("File #{filename} does not exist")
+            jsonfile = File.open(filename, 'w+')
+        end
 		jsonfile << event.to_json
 		jsonfile.close
 		puts "Successfully saved " + filename
