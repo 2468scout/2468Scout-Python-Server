@@ -106,14 +106,6 @@ class Team #one for each team .. ever
 		@avgLowFuelPerMatch = lowpermatch
 		@avgRankingPoints = avgrp
 	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
 	def to_json
 		{':sTeamName' => @sTeamName, ':iTeamNumber' => @iTeamNumber, ':awardsList' => @awardsList, ':avgGearsPerMatch' => @avgGearsPerMatch, ':avgHighFuelPerMatch' => @avgHighFuelPerMatch, ':avgLowFuelPerMatch' => @avgLowFuelPerMatch, ':avgRankingPoints' => @avgRankingPoints}.to_json
 	end
@@ -128,14 +120,6 @@ class MatchEvent #many per TeamMatch
 		@sEventName = eventName #what kind of thing happened - LOAD_HOPPER, CLIMB_FAIL, etc
 		@loc = location #Point object
 	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
 	def to_json
 		{':iTimeStamp' => @iTimeStamp, ':iPointValue' => @iPointValue, ':iCount' => @iCount, ':bInAutonomous' => @bInAutonomous, ':sEventName' => @sEventName, ':loc' => @loc}.to_json
 	end
@@ -146,14 +130,6 @@ class Point
 		@x = myx
 		@y = myy
 	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
 	def to_json
 		{':x' => @x, ':y' => @y}.to_json
 	end
@@ -163,14 +139,6 @@ class SimpleTeam
 	def initialize(teamname, teamnumber)
 		@sTeamName = teamname
 		@iTeamNumber = teamnumber
-	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
 	end
 	def to_json
 		{':sTeamName' => @sTeamName, ':iTeamNumber' => @iTeamNumber}.to_json
@@ -188,14 +156,6 @@ class TeamMatch
 		@sPersonScouting = personScouting
 		@bColor = color #Blue is True
 		@matchEventList = listMatchEvents
-	end
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value);
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
 	end
 end
 
