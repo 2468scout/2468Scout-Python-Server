@@ -23,7 +23,7 @@ class FRCEvent #one for each event
 	def initialize(eventName, eventCode)
 		@sEventName = eventName #the long name of the event
 		@sEventCode = eventCode #the event code
-		@teamNameList = [] #array of all teams attending
+		@simpleTeamList = [] #array of all teams attending
 		@teamMatchList = [] #array of all TeamMatch objects, 6 per match
 		@matchList = [] #array of all Match objects containing match number,
 	end

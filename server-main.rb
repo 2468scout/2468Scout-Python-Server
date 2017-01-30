@@ -101,6 +101,15 @@ $frcEvents.each do |frcevent|
 		end
 	end
 end
+$frcEvents.each do |frcevent|
+	frcevent.teamNameList = []
+	recievedTeamList = {}
+	recievedTeamList = JSON.parse(reqapi('2017/teams?eventCode=' + frcevent.sEventCode))
+	recievedTeamList['teams'].each do |recievedTeam|
+		frcevent.teamNameList << SimpleTeam.new(recievedTeam['nameShort'],recievedTeam["teamNumber"])
+	end
+end
+
 saveEventsData($frcEvents)
 
 #Need to find the following specific events: CMPTX, CASJ, TXDA, TXLU
