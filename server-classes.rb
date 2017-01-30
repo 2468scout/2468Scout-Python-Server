@@ -41,7 +41,7 @@ class FRCEvent #one for each event
     attr_accessor :teamMatchList
     attr_accessor :matchList
 	def to_json
-		{'sEventName' => @sEventName, 'sEventCode' => @sEventCode, 'teamNameList' => @teamNameList, 'teamMatchList' => @teamMatchList, 'matchList' => @matchList, 'listNamesByTeamMatch' => @listNamesByTeamMatch}
+		{:sEventName => @sEventName, :sEventCode => @sEventCode, :teamNameList => @teamNameList, :teamMatchList => @teamMatchList, :matchList => @matchList, :listNamesByTeamMatch => @listNamesByTeamMatch}.to_json
 	end
 end
 
@@ -72,7 +72,7 @@ class Match #one for each match in an event
 #		end
 #	end
 	def to_json
-		{'iMatchNumber' => @iMatchNumber, 'iRedScore' => @iRedScore, 'iBlueScore' => @iBlueScore, 'iRedRankingPoints' => @iRedRankingPoints, 'iBlueRankingPoints' => @iBlueRankingPoints, 'sCompetitionLevel' => @sCompetitionLevel, 'sEventCode' => @sEventCode, 'teamMatchList' => @teamMatchList}
+		{':iMatchNumber' => @iMatchNumber, ':iRedScore' => @iRedScore, ':iBlueScore' => @iBlueScore, ':iRedRankingPoints' => @iRedRankingPoints, ':iBlueRankingPoints' => @iBlueRankingPoints, ':sCompetitionLevel' => @sCompetitionLevel, ':sEventCode' => @sEventCode, ':teamMatchList' => @teamMatchList}.to_json
 	end
     attr_accessor :iMatchNumber, :iRedScore, :iBlueScore, :iRedRankingPoints, :iBlueRankingPoints, :sCompetitionLevel, :sEventCode, :teamMatchList
 end
@@ -94,7 +94,7 @@ class MatchData #one for each match in an event
 		end
 	end
 	def to_json
-		{'iMatchNumber' => @iMatchNumber, 'sCompetitionLevel' => @sCompetitionLevel, 'sEventCode' => @sEventCode, 'teamMatchList' => @teamMatchList}
+		{':iMatchNumber' => @iMatchNumber, ':sCompetitionLevel' => @sCompetitionLevel, ':sEventCode' => @sEventCode, ':teamMatchList' => @teamMatchList}
 	end
 end
 
@@ -118,7 +118,7 @@ class Team #one for each team .. ever
 		end
 	end
 	def to_json
-		{'sTeamName' => @sTeamName, 'iTeamNumber' => @iTeamNumber, 'awardsList' => @awardsList, 'avgGearsPerMatch' => @avgGearsPerMatch, 'avgHighFuelPerMatch' => @avgHighFuelPerMatch, 'avgLowFuelPerMatch' => @avgLowFuelPerMatch, 'avgRankingPoints' => @avgRankingPoints}.to_json
+		{':sTeamName' => @sTeamName, ':iTeamNumber' => @iTeamNumber, ':awardsList' => @awardsList, ':avgGearsPerMatch' => @avgGearsPerMatch, ':avgHighFuelPerMatch' => @avgHighFuelPerMatch, ':avgLowFuelPerMatch' => @avgLowFuelPerMatch, ':avgRankingPoints' => @avgRankingPoints}.to_json
 	end
 end
 
@@ -140,7 +140,7 @@ class MatchEvent #many per TeamMatch
 		end
 	end
 	def to_json
-		{'iTimeStamp' => @iTimeStamp, 'iPointValue' => @iPointValue, 'iCount' => @iCount, 'bInAutonomous' => @bInAutonomous, 'sEventName' => @sEventName, 'loc' => @loc}.to_json
+		{':iTimeStamp' => @iTimeStamp, ':iPointValue' => @iPointValue, ':iCount' => @iCount, ':bInAutonomous' => @bInAutonomous, ':sEventName' => @sEventName, ':loc' => @loc}.to_json
 	end
 end
 
@@ -158,7 +158,7 @@ class Point
 		end
 	end
 	def to_json
-		{'x' => @x, 'y' => @y}.to_json
+		{':x' => @x, ':y' => @y}.to_json
 	end
 end
 
@@ -176,7 +176,7 @@ class SimpleTeam
 		end
 	end
 	def to_json
-		{'sTeamName' => @sTeamName, 'iTeamNumber' => @iTeamNumber}.to_json
+		{':sTeamName' => @sTeamName, ':iTeamNumber' => @iTeamNumber}.to_json
 	end
 end
 
