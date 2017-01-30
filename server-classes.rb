@@ -91,7 +91,7 @@ class SimpleMatch #one for each match in an event
 		end
 	end
 	def to_json
-		{':iMatchNumber' => @iMatchNumber, ':sCompetitionLevel' => @sCompetitionLevel, ':sEventCode' => @sEventCode, ':teamMatchList' => @teamMatchList}.to_json
+		{:iMatchNumber => @iMatchNumber, :sCompetitionLevel => @sCompetitionLevel, :sEventCode => @sEventCode, :teamMatchList => @teamMatchList}.to_json
 	end
 end
 
@@ -107,7 +107,7 @@ class Team #one for each team .. ever
 		@avgRankingPoints = avgrp
 	end
 	def to_json
-		{':sTeamName' => @sTeamName, ':iTeamNumber' => @iTeamNumber, ':awardsList' => @awardsList, ':avgGearsPerMatch' => @avgGearsPerMatch, ':avgHighFuelPerMatch' => @avgHighFuelPerMatch, ':avgLowFuelPerMatch' => @avgLowFuelPerMatch, ':avgRankingPoints' => @avgRankingPoints}.to_json
+		{:sTeamName => @sTeamName, :iTeamNumber => @iTeamNumber, :awardsList => @awardsList, :avgGearsPerMatch => @avgGearsPerMatch, :avgHighFuelPerMatch => @avgHighFuelPerMatch, :avgLowFuelPerMatch => @avgLowFuelPerMatch, :avgRankingPoints => @avgRankingPoints}.to_json
 	end
 end
 
@@ -121,7 +121,7 @@ class MatchEvent #many per TeamMatch
 		@loc = location #Point object
 	end
 	def to_json
-		{':iTimeStamp' => @iTimeStamp, ':iPointValue' => @iPointValue, ':iCount' => @iCount, ':bInAutonomous' => @bInAutonomous, ':sEventName' => @sEventName, ':loc' => @loc}.to_json
+		{:iTimeStamp => @iTimeStamp, :iPointValue => @iPointValue, :iCount => @iCount, :bInAutonomous => @bInAutonomous, :sEventName => @sEventName, :loc => @loc}.to_json
 	end
 end
 
@@ -131,7 +131,7 @@ class Point
 		@y = myy
 	end
 	def to_json
-		{':x' => @x, ':y' => @y}.to_json
+		{:x => @x, :y => @y}.to_json
 	end
 end
 
@@ -141,7 +141,7 @@ class SimpleTeam
 		@iTeamNumber = teamnumber
 	end
 	def to_json
-		{':sTeamName' => @sTeamName, ':iTeamNumber' => @iTeamNumber}.to_json
+		{:sTeamName => @sTeamName, :iTeamNumber => @iTeamNumber}.to_json
 	end
 end
 
@@ -156,6 +156,9 @@ class TeamMatch
 		@sPersonScouting = personScouting
 		@bColor = color #Blue is True
 		@matchEventList = listMatchEvents
+	end
+	def to_json
+		{iTeamNumber: @iTeamNumber, iMatchNumber: @iMatchNumber, iStationNumber: @iStationNumber, iAllianceNumber: @iAllianceNumber, sNotes: @sNotes, sEventCode: @sEventCode, sPersonScouting: @sPersonScouting, bColor: @bColor, matchEventList: @matchEventList}.to_json
 	end
 end
 
