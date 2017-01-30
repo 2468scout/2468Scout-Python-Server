@@ -71,7 +71,7 @@ def reqapi(path) #Make sure we don't ask for the same thing too often
   	end
 end
 
-puts("Starting up!")
+puts("Begin events initialization")
 eventsString = reqapi('events/')
 #puts("Results from FRCAPI events list: " + eventsString)
 $events = JSON.parse(eventsString) #Get all the events from the API so we don't have to keep bothering them

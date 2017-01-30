@@ -220,16 +220,15 @@ def retrieveJSON(filename) #return JSON of a file
 	txtfile.close
 	JSON.parse(content)
 end
-def saveEventsData (frcEvents)
+def saveEventsData(frcEvents)
 	frcEvents.each do |event|
 		filename = "public/Events/" + event.sEventCode + ".json"
         if(File.exists? filename)
-            puts("Yeah, that file totally exists!")
-            jsonfile = File.open(filename)
+            puts("Overwriting existing file #{filename}")
         else
-            puts("File #{filename} does not exist")
-            jsonfile = File.open(filename, 'w+')
+            puts("Creating new file #{filename}")
         end
+        jsonfile = File.open(filename,'w')
 		jsonfile << event.to_json
 		jsonfile.close
 		puts "Successfully saved " + filename
