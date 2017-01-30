@@ -41,7 +41,7 @@ class FRCEvent #one for each event
     attr_accessor :teamMatchList
     attr_accessor :matchList
 	def to_json
-		{:sEventName => @sEventName, :sEventCode => @sEventCode, :teamNameList => @teamNameList, :teamMatchList => @teamMatchList, :matchList => @matchList, :listNamesByTeamMatch => @listNamesByTeamMatch}.to_json
+		{:sEventName => @sEventName, :sEventCode => @sEventCode, :teamNameList => @teamNameList, :teamMatchList => @teamMatchList, :matchList => @matchList}.to_json
 	end
 end
 
