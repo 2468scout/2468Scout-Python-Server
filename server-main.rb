@@ -85,11 +85,11 @@ end
 puts($frcEvents.empty?)
 
 $frcEvents.each do |frcevent|
-	recievedEvent = {}
-	recievedEvent = JSON.parse(reqapi('schedule/' + frcevent.sEventCode + '?tournamentLevel=qual'))
+	receivedEvent = {}
+	receivedEvent = JSON.parse(reqapi('schedule/' + frcevent.sEventCode + '?tournamentLevel=qual'))
 	frcevent.matchList = []
-	if !recievedEvent.empty?
-		recievedEvent['Schedule'].each do |match|
+	if !receivedEvent.empty?
+		receivedEvent['Schedule'].each do |match|
 			tempMatch = Match.new(match['matchNumber'], nil, nil, nil, nil, "qual", nil)
 			tempMatch.teamMatchList = []
 			match['Teams'].each do |team|
@@ -103,11 +103,11 @@ $frcEvents.each do |frcevent|
 end
 $frcEvents.each do |frcevent|
 	frcevent.teamNameList = []
-	recievedTeamList = {}
-	recievedTeamList = JSON.parse(reqapi('teams?eventCode=' + frcevent.sEventCode))
-	if !recievedTeamList.empty?
-		recievedTeamList['teams'].each do |recievedTeam|
-			frcevent.teamNameList << SimpleTeam.new(recievedTeam['nameShort'],recievedTeam["teamNumber"])
+	receivedTeamList = {}
+	receivedTeamList = JSON.parse(reqapi('teams?eventCode=' + frcevent.sEventCode))
+	if !receivedTeamList.empty?
+		receivedTeamList['teams'].each do |receivedTeam|
+			frcevent.teamNameList << SimpleTeam.new(receivedTeam['nameShort'],receivedTeam["teamNumber"])
 		end
 	end
 end
@@ -156,7 +156,11 @@ get '/getTeamMatch' do #Return a JSON of match data for a particular team?? (idk
 end
 
 get '/getTeamAnalytics' do
-
+	teamnumber = params['teamNumber']
+	eventcode = params['eventCode']
+	puts "Analyzing team #{teamnumber} at event #{eventcode}"
+	content_type :json
+	analyzeTeamAtEvent(teamnumber, eventcode)
 end
 
 ###POST REQUESTS

@@ -177,6 +177,7 @@ def retrieveJSON(filename) #return JSON of a file
 	txtfile.close
 	JSON.parse(content)
 end
+
 def saveEventsData(frcEvents)
 	frcEvents.each do |event|
 		filename = "public/Events/" + event.sEventCode + ".json"
