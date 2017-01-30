@@ -86,7 +86,7 @@ puts($frcEvents.empty?)
 
 $frcEvents.each do |frcevent|
 	recievedEvent = {}
-	recievedEvent = JSON.parse(reqapi('2017/schedule/' + frcevent.sEventCode + '?tournamentLevel=qual'))
+	recievedEvent = JSON.parse(reqapi('schedule/' + frcevent.sEventCode + '?tournamentLevel=qual'))
 	frcevent.matchList = []
 	if !recievedEvent.empty?
 		recievedEvent['Schedule'].each do |match|
@@ -104,7 +104,7 @@ end
 $frcEvents.each do |frcevent|
 	frcevent.teamNameList = []
 	recievedTeamList = {}
-	recievedTeamList = JSON.parse(reqapi('2017/teams?eventCode=' + frcevent.sEventCode))
+	recievedTeamList = JSON.parse(reqapi('teams?eventCode=' + frcevent.sEventCode))
 	if !recievedTeamList.empty?
 		recievedTeamList['teams'].each do |recievedTeam|
 			frcevent.teamNameList << SimpleTeam.new(recievedTeam['nameShort'],recievedTeam["teamNumber"])
