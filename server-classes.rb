@@ -94,7 +94,7 @@ class MatchData #one for each match in an event
 		end
 	end
 	def to_json
-		{':iMatchNumber' => @iMatchNumber, ':sCompetitionLevel' => @sCompetitionLevel, ':sEventCode' => @sEventCode, ':teamMatchList' => @teamMatchList}
+		{':iMatchNumber' => @iMatchNumber, ':sCompetitionLevel' => @sCompetitionLevel, ':sEventCode' => @sEventCode, ':teamMatchList' => @teamMatchList}.to_json
 	end
 end
 
