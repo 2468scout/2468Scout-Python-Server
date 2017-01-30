@@ -77,13 +77,12 @@ class Match #one for each match in an event
     attr_accessor :iMatchNumber, :iRedScore, :iBlueScore, :iRedRankingPoints, :iBlueRankingPoints, :sCompetitionLevel, :sEventCode, :teamMatchList
 end
 
-class MatchData #one for each match in an event
+class SimpleMatch #one for each match in an event
 	#MatchData contains data needed for scouting a match.
-	def initialize(matchNum, complevel, eventCode, tMatchList)
+	def initialize(matchNum, complevel, eventCode)
 		@iMatchNumber = matchNum #match ID
 		@sCompetitionLevel = complevel #the event.. level??? ffs thats a different api call entirely
 		@sEventCode = eventCode #the event code
-		@teamMatchList = tMatchList #array of 6 TeamMatch objects
 	end
 	def initialize(hash)
 		hash.each do |key, value|
