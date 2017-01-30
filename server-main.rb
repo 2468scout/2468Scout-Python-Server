@@ -179,7 +179,7 @@ post '/postTeamMatch' do #eventcode, teamnuber, matchnumber, all matchevents
   		#EXPERIMENTAL: saveMatchInfo(??) for simulations
 		status 200
 	rescue => e
-		puts "OOPS I GOT AN ERROR"
+		puts "SOILED IT #{e.class}, message is #{e.message}"
 		puts e.message
 		status 400
 	end

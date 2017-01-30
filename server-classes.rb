@@ -1,5 +1,3 @@
-
-
 ##################################################
 ############# BEGIN CLASS DEFINITION #############
 ##################################################
@@ -297,7 +295,11 @@ end
 def analyzeTeamAtEvent(teamnumber, eventcode)
 	#1. Collect all files related to the team and event
 	#2. Update scores and other data from the API
-	#3. 
+	#3. Hollistic analyses - games scouted, played, won
+	#4. MatchEvent analyses
+	#5. Compatibility analyses
+	#6. Future predictions / z-score / pick-ban
+	#7. Upcoming matches
 
 	filenames = [] #Names of all relevant files
 	pitfilenames = [] #Files for pit scouting
@@ -331,7 +333,7 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 					tempjson['matchEvents'].each do |matchevent| #Go through the match events
 						matchevents << matchevent #Add the matchevents to an array of team's match events
 					end #end matchevents foreach
-				end #end if tempjson['mathEvents']
+				end #end if tempjson['matchEvents']
 				if tempjson['iMatchNumber'] #If this json has a match number
 					matchnums << tempjson['iMatchNumber'] #Add the matchnumber to an array of team's matchnums
 				end #end if tempjson['iMatchNumber']
@@ -352,8 +354,9 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	#Analyze performance with and against other teams at event
 
 
-	{"filesFound" => filenames}.to_json
+	#{"filesFound" => filenames}.to_json
 	#{'matchEvents' => matchevents}.to_json
+	analysis.to_json
 end
 
 def analyzeTeamInMatch(teamnum, matchnum, eventname)
@@ -369,19 +372,34 @@ def sortMatchEvents(matchevents = [])
 		key = matchevent['sEventName']
 		val = matchevent
 		unless sortedevents[key]
-			sortedevents[key] = []
+			sortedevents[key] = [] #Initialize array to hold multiple matchevents
 		end
-		sortedevents[key] << val
+		sortedevents[key] << val #Add matchevent to array
 	end
 	sortedevents
 	
-	#sortedevents['GEAR_SCORE'] = [matchevent1, matchevent2, ...] etc
+	#sortedevents['GEAR_SCORE'] => [matchevent1, matchevent2, ...] etc
 end
 
 def analyzeSortedEvents(sortedevents = [])
 	#receive an array of relevant match events
 	#return a hash of analytics
 	analyzed = {}
+
+	gear_score = sortedevents['GEAR_SCORE'] #array of all gear_score matchevents
+	gear_load = sortedevents['GEAR_LOAD']
+	gear_drop = sortedevents['GEAR_DROP']
+
+	if gear_load.length > 0
+		gScorePerLoad = gear_score.length / gear_load.length
+		gDropPerLoad = gear_drop.length / gear_load.length 
+	else
+		gScorePerLoad = -1
+		gDropPerLoad = -1
+	end
+
+	analyzed['dGearAccuracy'] = gScorePerLoad
+
 	analyzed
 
 	#games scouted, winrate
