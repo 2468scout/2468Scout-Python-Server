@@ -127,7 +127,7 @@ class MatchEvent #many per TeamMatch
 		@iPointValue = pointVal #how many point earned
 		@iCount = cnt #how many time
 		@bInAutonomous = isauto #happened in autonomous yes/no
-		@sEventName = eventName #wtf why do we need an event name for every single piece of a match
+		@sEventName = eventName #what kind of thing happened - LOAD_HOPPER, CLIMB_FAIL, etc
 		@loc = location #Point object
 	end
 	def initialize(hash)
@@ -295,6 +295,10 @@ def updateScores(eventcode)
 end
 
 def analyzeTeamAtEvent(teamnumber, eventcode)
+	#1. Collect all files related to the team and event
+	#2. Update scores and other data from the API
+	#3. 
+
 	filenames = [] #Names of all relevant files
 	pitfilenames = [] #Files for pit scouting
 	teammatchfilenames = [] #Files for match scouting
@@ -335,12 +339,18 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 		end #end if teammatchfilenames.size
 	end #end if filenames.size
 
-	sortedevents = sortMatchEvents(matchevents)
-	#Call the specific methods
 
-	puts filenames.size.to_s + ' files found'
-	
-	#API Call goes here
+	#updateScores(eventcode)
+
+
+	#Analyze match events
+	sortedevents = sortMatchEvents(matchevents) #Sort by what happens in each event
+	analysis = analyzeSortedEvents(sortedevents) #Send out to analysis method instead of hard coding
+
+	#Analyze performance at event
+
+	#Analyze performance with and against other teams at event
+
 
 	{"filesFound" => filenames}.to_json
 	#{'matchEvents' => matchevents}.to_json
@@ -352,22 +362,28 @@ end
 
 def sortMatchEvents(matchevents = [])
 	#receive an array of match events
-	#return an array of arrays of match events
-	#sort using sMatchEventName
-	sortedevents = [[],[]]
+	#return a hash of arrays of match events
+	#sort using sEventName
+	sortedevents = {}
+	matchevents.each do |matchevent|
+		key = matchevent['sEventName']
+		val = matchevent
+		unless sortedevents[key]
+			sortedevents[key] = []
+		end
+		sortedevents[key] << val
+	end
 	sortedevents
-	#sortedevents[0] : highFuelStart, highFuelStop matchevents
-	#etc
+	
+	#sortedevents['GEAR_SCORE'] = [matchevent1, matchevent2, ...] etc
 end
 
-def analyzeHighGoals(highfuelevents = [])
+def analyzeSortedEvents(sortedevents = [])
 	#receive an array of relevant match events
-	#return an array of analytics
-	analyzed = [[],[]]
+	#return a hash of analytics
+	analyzed = {}
 	analyzed
-	#analyzed[0] : attempted per teleop
-	#analyzed[1] : accuracy per teleop
-	#analyzed[2] : attempted per autonomous
-	#analyzed[3] : accuracy in autonomous
-	#analyzed[4] : score earned per match from high goals
+
+	#games scouted, winrate
+
 end
