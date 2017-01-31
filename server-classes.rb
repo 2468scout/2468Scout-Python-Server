@@ -38,9 +38,9 @@ class FRCEvent #one for each event
     attr_accessor :teamNameList
     attr_accessor :teamMatchList
     attr_accessor :matchList
-  def to_json(options = {})
-    JSON.pretty_generate(self, options)
-    # {:sEventName => @sEventName, :sEventCode => @sEventCode, :teamNameList => @teamNameList, :teamMatchList => @teamMatchList, :matchList => @matchList}.to_json
+  def to_json(options)
+    # JSON.pretty_generate(self, options)
+    {:sEventName => @sEventName, :sEventCode => @sEventCode, :teamNameList => @teamNameList, :teamMatchList => @teamMatchList, :matchList => @matchList}.to_json(options)
   end
 end
 
@@ -70,9 +70,9 @@ class Match #one for each match in an event
 #			self.instance_variable_set("@#{key}", value);
 #		end
 #	end
-	def to_json(options = {})
-    JSON.pretty_generate(self, options)
-		# {':iMatchNumber' => @iMatchNumber, ':iRedScore' => @iRedScore, ':iBlueScore' => @iBlueScore, ':iRedRankingPoints' => @iRedRankingPoints, ':iBlueRankingPoints' => @iBlueRankingPoints, ':sCompetitionLevel' => @sCompetitionLevel, ':sEventCode' => @sEventCode, ':teamMatchList' => @teamMatchList}.to_json
+	def to_json(options)
+    # JSON.pretty_generate(self, options)
+		{':iMatchNumber' => @iMatchNumber, ':iRedScore' => @iRedScore, ':iBlueScore' => @iBlueScore, ':iRedRankingPoints' => @iRedRankingPoints, ':iBlueRankingPoints' => @iBlueRankingPoints, ':sCompetitionLevel' => @sCompetitionLevel, ':sEventCode' => @sEventCode, ':teamMatchList' => @teamMatchList}.to_json(options)
 	end
     attr_accessor :iMatchNumber, :iRedScore, :iBlueScore, :iRedRankingPoints, :iBlueRankingPoints, :sCompetitionLevel, :sEventCode, :teamMatchList
 end
@@ -92,9 +92,9 @@ class SimpleMatch #one for each match in an event
 			self.instance_variable_set("@#{key}", value);
 		end
 	end
-	def to_json(options = {})
-    JSON.pretty_generate(self, options)
-		# {:iMatchNumber => @iMatchNumber, :sCompetitionLevel => @sCompetitionLevel, :sEventCode => @sEventCode, :teamMatchList => @teamMatchList}.to_json
+	def to_json(options)
+    # JSON.pretty_generate(self, options)
+		{:iMatchNumber => @iMatchNumber, :sCompetitionLevel => @sCompetitionLevel, :sEventCode => @sEventCode, :teamMatchList => @teamMatchList}.to_json(options)
 	end
 end
 
@@ -110,9 +110,9 @@ class Team #one for each team .. ever
     @avgRankingPoints = avgrp
   end
 
-  def to_json(options = {})
-    JSON.pretty_generate(self, options)
-    # {:sTeamName => @sTeamName, :iTeamNumber => @iTeamNumber, :awardsList => @awardsList, :avgGearsPerMatch => @avgGearsPerMatch, :avgHighFuelPerMatch => @avgHighFuelPerMatch, :avgLowFuelPerMatch => @avgLowFuelPerMatch, :avgRankingPoints => @avgRankingPoints}.to_json
+  def to_json(options)
+    # JSON.pretty_generate(self, options)
+    {:sTeamName => @sTeamName, :iTeamNumber => @iTeamNumber, :awardsList => @awardsList, :avgGearsPerMatch => @avgGearsPerMatch, :avgHighFuelPerMatch => @avgHighFuelPerMatch, :avgLowFuelPerMatch => @avgLowFuelPerMatch, :avgRankingPoints => @avgRankingPoints}.to_json(options)
   end
 end
 
@@ -126,9 +126,9 @@ class MatchEvent #many per TeamMatch
     @loc = location #Point object
   end
 
-  def to_json(options = {})
-    JSON.pretty_generate(self, options)
-    # {:iTimeStamp => @iTimeStamp, :iPointValue => @iPointValue, :iCount => @iCount, :bInAutonomous => @bInAutonomous, :sEventName => @sEventName, :loc => @loc}.to_json
+  def to_json(options)
+    # JSON.pretty_generate(self, options)
+    {:iTimeStamp => @iTimeStamp, :iPointValue => @iPointValue, :iCount => @iCount, :bInAutonomous => @bInAutonomous, :sEventName => @sEventName, :loc => @loc}.to_json(options)
   end
 end
 
@@ -138,8 +138,8 @@ class Point
     @y = myy
   end
   def to_json(options = {})
-    JSON.pretty_generate(self, options)
-    # {:x => @x, :y => @y}.to_json
+    # JSON.pretty_generate(self, options)
+    {:x => @x, :y => @y}.to_json(options)
   end
 end
 
@@ -149,9 +149,9 @@ class SimpleTeam
     @iTeamNumber = teamnumber
   end
 
-  def to_json(options = {})
-    JSON.pretty_generate(self, options)
-		# {:sTeamName => @sTeamName, :iTeamNumber => @iTeamNumber}.to_json
+  def to_json(options)
+    # JSON.pretty_generate(self, options)
+    {:sTeamName => @sTeamName, :iTeamNumber => @iTeamNumber}.to_json(options)
 	end
 end
 
@@ -167,9 +167,9 @@ class TeamMatch
     @bColor = color #Blue is True
 		@matchEventList = listMatchEvents
 	end
-	def to_json(options = {})
-    JSON.pretty_generate(self, options)
-		# {iTeamNumber: @iTeamNumber, iMatchNumber: @iMatchNumber, iStationNumber: @iStationNumber, iAllianceNumber: @iAllianceNumber, sNotes: @sNotes, sEventCode: @sEventCode, sPersonScouting: @sPersonScouting, bColor: @bColor, matchEventList: @matchEventList}.to_json
+	def to_json(options)
+    # JSON.pretty_generate(self, options)
+		{iTeamNumber: @iTeamNumber, iMatchNumber: @iMatchNumber, iStationNumber: @iStationNumber, iAllianceNumber: @iAllianceNumber, sNotes: @sNotes, sEventCode: @sEventCode, sPersonScouting: @sPersonScouting, bColor: @bColor, matchEventList: @matchEventList}.to_json(options)
 	end
 end
 
@@ -195,13 +195,13 @@ end
 def saveEventsData(frcEvents)
 	frcEvents.each do |event|
 		filename = "public/Events/" + event.sEventCode + ".json"
-        if(File.exists? filename)
+        if(File.exist? filename)
             puts("Overwriting existing file #{filename}")
         else
             puts("Creating new file #{filename}")
         end
         jsonfile = File.open(filename,'w')
-		jsonfile << event.to_json
+		jsonfile << event.to_json(options = {})
 		jsonfile.close
 		puts "Successfully saved " + filename
 	end
