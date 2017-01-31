@@ -42,9 +42,9 @@ def api(path) #Returns the FRC API file for the specified path in JSON format.
   begin
   	puts "I am accessing the API at path #{path}"
     open("#{$server}#{path}", #https://frc-api. ... .org/v.2.0/ ... /the thing we want
-      "User-Agent" => "https://github.com/2468scout/2468Scout-Ruby-Server", #Dunno what this is but Isaac did it
-      "Authorization" => "Basic #{$token}", #Standard procedure outlined by their API
-      "accept" => "application/json" #We want JSON files, so we will ask for JSON
+      'User-Agent' => "https://github.com/2468scout/2468Scout-Ruby-Server", #Dunno what this is but Isaac did it
+      'Authorization' => "Basic #{$token}", #Standard procedure outlined by their API
+      'accept' => "application/json" #We want JSON files, so we will ask for JSON
     ).read
   rescue => e
   	puts "Something went wrong #{e.class}, message is #{e.message}"
@@ -53,22 +53,22 @@ def api(path) #Returns the FRC API file for the specified path in JSON format.
 end
 
 def reqapi(path) #Make sure we don't ask for the same thing too often
-	begin
-    	req = path
-    	if $requests[req] && ($requests[req][:time] + 120 > Time.now.to_f) 
-    	  $requests[req][:data] #we requested the same thing within 2 minutes
-    	else
-    		$requests[req] = {
-    	    	data: api(req),
-    	    	time: Time.now.to_f
-    	  	}
-    	  	$requests[req][:data] #new request so we make a new one and return its data
-    	end
-  	rescue
-    	#status 404
-		puts("Status 404")
-    	return '{}'
-  	end
+  begin
+      req = path
+      if $requests[req] && ($requests[req][:time] + 120 > Time.now.to_f) 
+        $requests[req][:data] #we requested the same thing within 2 minutes
+      else
+        $requests[req] = {
+            data: api(req),
+            time: Time.now.to_f
+          }
+          $requests[req][:data] #new request so we make a new one and return its data
+      end
+    rescue
+      # status 404
+      puts("Status 404")
+      return '{}'
+    end
 end
 
 puts("Begin events initialization")
@@ -77,137 +77,137 @@ eventsString = reqapi('events/')
 $events = JSON.parse(eventsString) #Get all the events from the API so we don't have to keep bothering them
 $frcEvents = []
 $events["Events"].each do |event|
-	if(event['code'] == "CMPTX" || event['code'] == "CASJ" || event['code'] == "TXDA" || event['code'] == "TXLU" )
-		tempEvent = FRCEvent.new(event['name'], event['code'])
-		$frcEvents << tempEvent
-	end
+  if(event['code'] == "CMPTX" || event['code'] == "CASJ" || event['code'] == "TXDA" || event['code'] == "TXLU" )
+    tempEvent = FRCEvent.new(event['name'], event['code'])
+    $frcEvents << tempEvent
+  end
 end
 puts($frcEvents.empty?)
 
 $frcEvents.each do |frcevent|
-	receivedEvent = {}
-	receivedEvent = JSON.parse(reqapi('schedule/' + frcevent.sEventCode + '?tournamentLevel=qual'))
-	frcevent.matchList = []
-	if !receivedEvent.empty?
-		receivedEvent['Schedule'].each do |match|
-			tempMatch = Match.new(match['matchNumber'], nil, nil, nil, nil, "qual", nil)
-			tempMatch.teamMatchList = []
-			match['Teams'].each do |team|
-				tempMatch.teamMatchList << TeamMatch.new(team['number'], match['matchNumber'], 
-				/\d+/.match(team['station']).try(:[], 0), #I have literally no idea what this does, but it should work lol
-				nil, nil, frcevent.sEventCode, nil, team['station'][0] == "B", nil)
-			end
-			frcevent.matchList << tempMatch
-		end
-	end
+  receivedEvent = {}
+  receivedEvent = JSON.parse(reqapi('schedule/' + frcevent.sEventCode + '?tournamentLevel=qual'))
+  frcevent.matchList = []
+  unless receivedEvent.empty?
+    receivedEvent['Schedule'].each do |match|
+      tempMatch = Match.new(match['matchNumber'], nil, nil, nil, nil, "qual", nil)
+      tempMatch.teamMatchList = []
+      match['Teams'].each do |team|
+        tempMatch.teamMatchList << TeamMatch.new(team['number'], match['matchNumber'], 
+        /\d+/.match(team['station']).try(:[], 0), # I have literally no idea what this does, but it should work lol
+        nil, nil, frcevent.sEventCode, nil, team['station'][0] == "B", nil)
+      end
+      frcevent.matchList << tempMatch
+    end
+  end
 end
 $frcEvents.each do |frcevent|
-	frcevent.teamNameList = []
-	receivedTeamList = {}
-	receivedTeamList = JSON.parse(reqapi('teams?eventCode=' + frcevent.sEventCode))
-	if !receivedTeamList.empty?
-		receivedTeamList['teams'].each do |receivedTeam|
-			frcevent.teamNameList << SimpleTeam.new(receivedTeam['nameShort'],receivedTeam["teamNumber"])
-		end
-	end
+  frcevent.teamNameList = []
+  receivedTeamList = {}
+  receivedTeamList = JSON.parse(reqapi('teams?eventCode=' + frcevent.sEventCode))
+  if !receivedTeamList.empty?
+    receivedTeamList['teams'].each do |receivedTeam|
+      frcevent.teamNameList << SimpleTeam.new(receivedTeam['nameShort'],receivedTeam["teamNumber"])
+    end
+  end
 end
 
 saveEventsData($frcEvents)
 
-#Need to find the following specific events: CMPTX, CASJ, TXDA, TXLU
+# Need to find the following specific events: CMPTX, CASJ, TXDA, TXLU
 
-################################################
-#############BEGIN REQUEST HANDLING#############
-################################################
-#GET - Client requests data from a specified resource
-#POST - Client submits data to be processed to a specified resource
+##################################################
+############# BEGIN REQUEST HANDLING #############
+##################################################
+# GET - Client requests data from a specified resource
+# POST - Client submits data to be processed to a specified resource
 
-###GET REQUESTS
+### GET REQUESTS
 
-get '/getEvents' do #Return a JSON of the events we got directly from the API, as well as an identifier
-	content_type :json
- 	$events
+get '/getEvents' do # Return a JSON of the events we got directly from the API, as well as an identifier
+  content_type :json
+  $events
 end
 
 get '/getSimpleTeamList' do
-	tempeventcode = params['eventCode']
-	content_type :json
-	getSimpleTeamList(tempeventcode)
+  tempeventcode = params['eventCode']
+  content_type :json
+  getSimpleTeamList(tempeventcode)
 end
 
 get '/getMatchList' do
-	content_type :json
-	'{"test":"Success"}'
+  content_type :json
+  '{"test":"Success"}'
 end
 
 get '/getTeamMatch' do #Return a JSON of match data for a particular team?? (idk.. Ian vult)
-	begin
-		content_type :json
-		eventcode = params['eventCode']
-		teamnumber = params['teamNumber']
-		matchnumber = params['matchNumber']
-		filename = "public/data/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
-		retrieveJSON(filename)
-	rescue => e
-		puts e
-		status 400
-		return '{}'
-	end	
+  begin
+    content_type :json
+    eventcode = params['eventCode']
+    teamnumber = params['teamNumber']
+    matchnumber = params['matchNumber']
+    filename = "public/data/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
+    retrieveJSON(filename)
+  rescue => e
+    puts e
+    status 400
+    return '{}'
+  end
 end
 
 get '/getTeamAnalytics' do
-	teamnumber = params['teamNumber']
-	eventcode = params['eventCode']
-	puts "Analyzing team #{teamnumber} at event #{eventcode}"
-	content_type :json
-	analyzeTeamAtEvent(teamnumber, eventcode)
+  teamnumber = params['teamNumber']
+  eventcode = params['eventCode']
+  puts "Analyzing team #{teamnumber} at event #{eventcode}"
+  content_type :json
+  analyzeTeamAtEvent(teamnumber, eventcode)
 end
 
-###POST REQUESTS
+### POST REQUESTS
 
-post '/postpit' do #Pit scouting (receive team data) #input is an actual string
-	begin
-  		#Congration u done it
-  		testvar = params['test']
-  		puts testvar
-    	status 200
-	rescue => e
-    	puts e
-    	status 400
-	end
+post '/postpit' do # Pit scouting (receive team data) #input is an actual string
+  begin
+    # Congration u done it
+    testvar = params['test']
+    puts testvar
+    status 200
+  rescue => e
+    puts e
+    status 400
+  end
 end
 
-post '/postTeamMatch' do #eventcode, teamnuber, matchnumber, all matchevents
-	begin
-  		saveTeamMatchInfo(params['obj'])
-  		#EXPERIMENTAL: saveMatchInfo(??) for simulations
-		status 200
-	rescue => e
-		puts "SOILED IT #{e.class}, message is #{e.message}"
-		puts e.message
-		status 400
-	end
+post '/postTeamMatch' do # eventcode, teamnuber, matchnumber, all matchevents
+  begin
+    saveTeamMatchInfo(params['obj'])
+    # EXPERIMENTAL: saveMatchInfo(??) for simulations
+    status 200
+  rescue => e
+    puts "SOILED IT #{e.class}, message is #{e.message}"
+    puts e.message
+    status 400
+  end
 end
 
 post '/postTeamImage' do
-	begin
-		teamnum = params['iTeamNumber']
-		eventcode = params['sEventCode']
-		#HOW DO I HANDLE IMAGES
-		status 200
-	rescue
-		status 400
-	end
+  begin
+    teamnum = params['iTeamNumber']
+    eventcode = params['sEventCode']
+    # HOW DO I HANDLE IMAGES
+    status 200
+  rescue
+    status 400
+  end
 end
 
 
 
 
-#dummy inputs for testing
-#saveTeamPitInfo({'sEventCode' => 'TXDA', 'iTeamNumber' => 2468, 'data' => 'This is a broken robot!'}.to_json)
-#saveTeamMatchInfo({'sEventCode' => 'TXSA', 'iTeamNumber' => 2468, 'iMatchNumber' => 10, 'data' => 'This team scored low!'}.to_json)
-#saveTeamMatchInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'iMatchNumber' => 3, 'data' => 'This team scored high!'}.to_json)
-#saveTeamMatchInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'iMatchNumber' => 40, 'data' => 'This team broke down!'}.to_json)
-#saveTeamPitInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'data' => 'This is a cool robot!'}.to_json)
-#analyzeTeamAtEvent(2468,'CASJ')
-#5 files, 3 relevant
+# dummy inputs for testing
+# saveTeamPitInfo({'sEventCode' => 'TXDA', 'iTeamNumber' => 2468, 'data' => 'This is a broken robot!'}.to_json)
+# saveTeamMatchInfo({'sEventCode' => 'TXSA', 'iTeamNumber' => 2468, 'iMatchNumber' => 10, 'data' => 'This team scored low!'}.to_json)
+# saveTeamMatchInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'iMatchNumber' => 3, 'data' => 'This team scored high!'}.to_json)
+# saveTeamMatchInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'iMatchNumber' => 40, 'data' => 'This team broke down!'}.to_json)
+# saveTeamPitInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'data' => 'This is a cool robot!'}.to_json)
+# analyzeTeamAtEvent(2468,'CASJ')
+# 5 files, 3 relevant
