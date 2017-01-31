@@ -34,13 +34,13 @@ class FRCEvent #one for each event
 #		end
 #	end
   attr_accessor :sEventName
-    attr_accessor :sEventCode
-    attr_accessor :teamNameList
-    attr_accessor :teamMatchList
-    attr_accessor :matchList
+  attr_accessor :sEventCode
+  attr_accessor :simpleTeamList
+  attr_accessor :teamMatchList
+  attr_accessor :matchList
   def to_json(options)
     # JSON.pretty_generate(self, options)
-    {:sEventName => @sEventName, :sEventCode => @sEventCode, :teamNameList => @teamNameList, :teamMatchList => @teamMatchList, :matchList => @matchList}.to_json(options)
+    {:sEventName => @sEventName, :sEventCode => @sEventCode, :simpleTeamList => @simpleTeamList, :teamMatchList => @teamMatchList, :matchList => @matchList}.to_json(options)
   end
 end
 
