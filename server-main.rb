@@ -13,8 +13,9 @@ require 'uri'     #Uniform Resource Identifiers (interact with FRC API and clien
 require 'openssl' #Not sure if we need this but we've been having some SSL awkwardness
 require 'ostruct' #Turn JSON into instant objects! Huzzah!
 require_relative 'server-classes.rb'
-OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 #bundle install
+
+ENV['SSL_CERT_FILE'] = 'human/cacert.pem'
 
 set :bind, '0.0.0.0' #localhost
 set :port, 8080   #DO NOT CHANGE without coordination w/client
