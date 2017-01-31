@@ -17,14 +17,14 @@ class Hashit
 	end
 end
 
-class FRCEvent #one for each event
-	def initialize(eventName, eventCode)
-		@sEventName = eventName #the long name of the event
-		@sEventCode = eventCode #the event code
-		@simpleTeamList = [] #array of all teams attending
-		@teamMatchList = [] #array of all TeamMatch objects, 6 per match
-		@matchList = [] #array of all Match objects containing match number,
-	end
+class FRCEvent #one for each event  
+  def initialize(eventName, eventCode)
+    @sEventName = eventName #the long name of the event
+    @sEventCode = eventCode #the event code
+    @simpleTeamList = [] #array of all teams attending
+    @teamMatchList = [] #array of all TeamMatch objects, 6 per match
+    @matchList = [] #array of all Match objects containing match number,
+  end
 #	def initialize(hash)
 #		hash.each do |key, value|
 #			if value.is_a?(hash)
@@ -33,14 +33,15 @@ class FRCEvent #one for each event
 #			self.instance_variable_set("@#{key}", value);
 #		end
 #	end
-	attr_accessor :sEventName
+  attr_accessor :sEventName
     attr_accessor :sEventCode
     attr_accessor :teamNameList
     attr_accessor :teamMatchList
     attr_accessor :matchList
-	def to_json
-		{:sEventName => @sEventName, :sEventCode => @sEventCode, :teamNameList => @teamNameList, :teamMatchList => @teamMatchList, :matchList => @matchList}.to_json
-	end
+  def to_json(options = {})
+    JSON.pretty_generate(self, options)
+    # {:sEventName => @sEventName, :sEventCode => @sEventCode, :teamNameList => @teamNameList, :teamMatchList => @teamMatchList, :matchList => @matchList}.to_json
+  end
 end
 
 
@@ -69,8 +70,9 @@ class Match #one for each match in an event
 #			self.instance_variable_set("@#{key}", value);
 #		end
 #	end
-	def to_json
-		{':iMatchNumber' => @iMatchNumber, ':iRedScore' => @iRedScore, ':iBlueScore' => @iBlueScore, ':iRedRankingPoints' => @iRedRankingPoints, ':iBlueRankingPoints' => @iBlueRankingPoints, ':sCompetitionLevel' => @sCompetitionLevel, ':sEventCode' => @sEventCode, ':teamMatchList' => @teamMatchList}.to_json
+	def to_json(options = {})
+    JSON.pretty_generate(self, options)
+		# {':iMatchNumber' => @iMatchNumber, ':iRedScore' => @iRedScore, ':iBlueScore' => @iBlueScore, ':iRedRankingPoints' => @iRedRankingPoints, ':iBlueRankingPoints' => @iBlueRankingPoints, ':sCompetitionLevel' => @sCompetitionLevel, ':sEventCode' => @sEventCode, ':teamMatchList' => @teamMatchList}.to_json
 	end
     attr_accessor :iMatchNumber, :iRedScore, :iBlueScore, :iRedRankingPoints, :iBlueRankingPoints, :sCompetitionLevel, :sEventCode, :teamMatchList
 end
@@ -90,75 +92,84 @@ class SimpleMatch #one for each match in an event
 			self.instance_variable_set("@#{key}", value);
 		end
 	end
-	def to_json
-		{:iMatchNumber => @iMatchNumber, :sCompetitionLevel => @sCompetitionLevel, :sEventCode => @sEventCode, :teamMatchList => @teamMatchList}.to_json
+	def to_json(options = {})
+    JSON.pretty_generate(self, options)
+		# {:iMatchNumber => @iMatchNumber, :sCompetitionLevel => @sCompetitionLevel, :sEventCode => @sEventCode, :teamMatchList => @teamMatchList}.to_json
 	end
 end
 
 
 class Team #one for each team .. ever
-	def initialize(teamName, teamNum, awardsArray, gearspermatch, highpermatch, lowpermatch, avgrp)
-		@sTeamName = teamName
-		@iTeamNumber = teamNum
-		@awardsList = awardsArray
-		@avgGearsPerMatch = gearspermatch
-		@avgHighFuelPerMatch = highpermatch
-		@avgLowFuelPerMatch = lowpermatch
-		@avgRankingPoints = avgrp
-	end
-	def to_json
-		{:sTeamName => @sTeamName, :iTeamNumber => @iTeamNumber, :awardsList => @awardsList, :avgGearsPerMatch => @avgGearsPerMatch, :avgHighFuelPerMatch => @avgHighFuelPerMatch, :avgLowFuelPerMatch => @avgLowFuelPerMatch, :avgRankingPoints => @avgRankingPoints}.to_json
-	end
+  def initialize(teamName, teamNum, awardsArray, gearspermatch, highpermatch, lowpermatch, avgrp)
+    @sTeamName = teamName
+    @iTeamNumber = teamNum
+    @awardsList = awardsArray
+    @avgGearsPerMatch = gearspermatch
+    @avgHighFuelPerMatch = highpermatch
+    @avgLowFuelPerMatch = lowpermatch
+    @avgRankingPoints = avgrp
+  end
+
+  def to_json(options = {})
+    JSON.pretty_generate(self, options)
+    # {:sTeamName => @sTeamName, :iTeamNumber => @iTeamNumber, :awardsList => @awardsList, :avgGearsPerMatch => @avgGearsPerMatch, :avgHighFuelPerMatch => @avgHighFuelPerMatch, :avgLowFuelPerMatch => @avgLowFuelPerMatch, :avgRankingPoints => @avgRankingPoints}.to_json
+  end
 end
 
 class MatchEvent #many per TeamMatch
-	def initialize(timStamp, pointVal, cnt, isauto, eventname, location)
-		@iTimeStamp = timStamp #how much time
-		@iPointValue = pointVal #how many point earned
-		@iCount = cnt #how many time
-		@bInAutonomous = isauto #happened in autonomous yes/no
-		@sEventName = eventName #what kind of thing happened - LOAD_HOPPER, CLIMB_FAIL, etc
-		@loc = location #Point object
-	end
-	def to_json
-		{:iTimeStamp => @iTimeStamp, :iPointValue => @iPointValue, :iCount => @iCount, :bInAutonomous => @bInAutonomous, :sEventName => @sEventName, :loc => @loc}.to_json
-	end
+  def initialize(timStamp, pointVal, cnt, isauto, eventname, location)
+    @iTimeStamp = timStamp #how much time
+    @iPointValue = pointVal #how many point earned
+    @iCount = cnt #how many time
+    @bInAutonomous = isauto #happened in autonomous yes/no
+    @sEventName = eventName #what kind of thing happened - LOAD_HOPPER, CLIMB_FAIL, etc
+    @loc = location #Point object
+  end
+
+  def to_json(options = {})
+    JSON.pretty_generate(self, options)
+    # {:iTimeStamp => @iTimeStamp, :iPointValue => @iPointValue, :iCount => @iCount, :bInAutonomous => @bInAutonomous, :sEventName => @sEventName, :loc => @loc}.to_json
+  end
 end
 
 class Point
-	def initialize(myx, myy)
-		@x = myx
-		@y = myy
-	end
-	def to_json
-		{:x => @x, :y => @y}.to_json
-	end
+  def initialize(myx, myy)
+    @x = myx
+    @y = myy
+  end
+  def to_json(options = {})
+    JSON.pretty_generate(self, options)
+    # {:x => @x, :y => @y}.to_json
+  end
 end
 
 class SimpleTeam
-	def initialize(teamname, teamnumber)
-		@sTeamName = teamname
-		@iTeamNumber = teamnumber
-	end
-	def to_json
-		{:sTeamName => @sTeamName, :iTeamNumber => @iTeamNumber}.to_json
+  def initialize(teamname, teamnumber)
+    @sTeamName = teamname
+    @iTeamNumber = teamnumber
+  end
+
+  def to_json(options = {})
+    JSON.pretty_generate(self, options)
+		# {:sTeamName => @sTeamName, :iTeamNumber => @iTeamNumber}.to_json
 	end
 end
 
 class TeamMatch
-	def initalize(teamNumber, matchNumber, numberInAlliance, allianceNumber, notes, eventCode, personScouting, color, listMatchEvents)
-		@iTeamNumber = teamNumber
-		@iMatchNumber = matchNumber
-		@iStationNumber = numberInAlliance
-		@iAllianceNumber = allianceNumber
-		@sNotes = notes
-		@sEventCode = eventCode
-		@sPersonScouting = personScouting
-		@bColor = color #Blue is True
+  def initalize(teamNumber, matchNumber, numberInAlliance, allianceNumber, notes, eventCode, personScouting, color, listMatchEvents)
+    @iTeamNumber = teamNumber
+    @iMatchNumber = matchNumber
+    @iStationNumber = numberInAlliance
+    @iAllianceNumber = allianceNumber
+    @sNotes = notes
+    @sEventCode = eventCode
+    @sPersonScouting = personScouting
+    @bColor = color #Blue is True
 		@matchEventList = listMatchEvents
 	end
-	def to_json
-		{iTeamNumber: @iTeamNumber, iMatchNumber: @iMatchNumber, iStationNumber: @iStationNumber, iAllianceNumber: @iAllianceNumber, sNotes: @sNotes, sEventCode: @sEventCode, sPersonScouting: @sPersonScouting, bColor: @bColor, matchEventList: @matchEventList}.to_json
+	def to_json(options = {})
+    JSON.pretty_generate(self, options)
+		# {iTeamNumber: @iTeamNumber, iMatchNumber: @iMatchNumber, iStationNumber: @iStationNumber, iAllianceNumber: @iAllianceNumber, sNotes: @sNotes, sEventCode: @sEventCode, sPersonScouting: @sPersonScouting, bColor: @bColor, matchEventList: @matchEventList}.to_json
 	end
 end
 
