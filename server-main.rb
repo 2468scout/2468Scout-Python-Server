@@ -103,12 +103,12 @@ $frcEvents.each do |frcevent|
   end
 end
 $frcEvents.each do |frcevent|
-  frcevent.teamNameList = []
+  frcevent.simpleTeamList = []
   receivedTeamList = {}
   receivedTeamList = JSON.parse(reqapi('teams?eventCode=' + frcevent.sEventCode))
   if !receivedTeamList.empty?
     receivedTeamList['teams'].each do |receivedTeam|
-      frcevent.teamNameList << SimpleTeam.new(receivedTeam['nameShort'],receivedTeam["teamNumber"])
+      frcevent.simpleTeamList << SimpleTeam.new(receivedTeam['nameShort'],receivedTeam["teamNumber"])
     end
   end
 end
