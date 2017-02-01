@@ -267,7 +267,7 @@ def updateScores(eventcode)
 	#useful for winrates, scores, RP, rankings
 end
 
-def analyzeTeam(teamnumber)
+def analyzeTeamAtEvent(teamnumber, eventcode)
 	#1. Collect all files related to the team and event
 	#2. Update scores and other data from the API
 	#3. Hollistic analyses - games scouted, played, won
@@ -288,7 +288,7 @@ def analyzeTeam(teamnumber)
 		filenames << filename
 		pitfilenames << filename
 	end
-	Dir.glob("public/TeamMatches/*_TeamMatch*_Team"+teamnumber.to_s+".json") do |filename|
+	Dir.glob("public/TeamMatches/"+eventcode+"_TeamMatch*_Team"+teamnumber.to_s+".json") do |filename|
 		filenames << filename
 		teammatchfilenames << filename
 	end
@@ -335,7 +335,7 @@ def analyzeTeam(teamnumber)
 end
 
 def analyzeTeamInMatch(teamnum, matchnum, eventname)
-	#specific match-by-match, instead of holistic
+	#specific match-by-match, instead of hollistic
 end
 
 def sortMatchEvents(matchevents = [])
