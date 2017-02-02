@@ -7,14 +7,24 @@
 #We should have a separate class, variable, or file for event analytical data to be easily accessed.
 
 class Hashit
-	def initialize(hash)
-		hash.each do |key, value|
-			if value.is_a?(hash)
-				value = new Hashit(value)
-			end
-			self.instance_variable_set("@#{key}", value);
-		end
-	end
+  def initialize(hash)
+    hash.each do |key, value|
+      if value.is_a?(hash)
+        value = new Hashit(value)
+      end
+      instance_variable_set("@#{key}", value)
+    end
+  end
+end
+
+class ScheduleItem
+  def initialize(personResponsible, itemType, eventCode, matchNumber, teamNumber)
+    @sPersonResponsible = personResponsible
+    @sItemType = itemType
+    @sEventCode = eventCode
+    @iMatchNumber = matchNumber
+    @iTeamNumber = teamNumber
+  end
 end
 
 class FRCEvent #one for each event  
@@ -22,6 +32,7 @@ class FRCEvent #one for each event
     @sEventName = eventName #the long name of the event
     @sEventCode = eventCode #the event code
     @simpleTeamList = [] #array of all teams attending
+    @scheduleItemList = []
     @teamMatchList = [] #array of all TeamMatch objects, 6 per match
     @matchList = [] #array of all Match objects containing match number,
   end
