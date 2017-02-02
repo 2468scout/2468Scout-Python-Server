@@ -214,11 +214,12 @@ def saveTeamMatchInfo(jsondata)
 	matchnumber = jsondata['iMatchNumber']
 	filename = "public/TeamMatches/"+eventcode+"_TeamMatch"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
 	jsonfile = File.open(filename,'w')
-	jsonfile << jsondata #array of all MatchEvent objects into file. maybe?
+	jsonfile << jsondata.to_json #array of all MatchEvent objects into file. maybe?
 	jsonfile.close
 	#Possible extra task: compare existing json to saved json in case of double-saving
 	puts "Successfully saved " + filename
 
+	puts "Here are some analytics"
 	analyzeTeamAtEvent(teamnumber, eventcode)
 end
 
@@ -232,9 +233,8 @@ def saveTeamPitInfo(jsondata)
 	#	existingjson = retrieveJSON(filename)
 	#end
 	jsonfile = File.open(filename,'w')
-	jsonfile << jsondata
+	jsonfile << jsondata.to_json
 	jsonfile.close
-	puts "Successfully saved " + filename
 end
 
 def getSimpleTeamList(eventcode)
@@ -270,7 +270,7 @@ end
 def analyzeTeamAtEvent(teamnumber, eventcode)
 	#1. Collect all files related to the team and event
 	#2. Update scores and other data from the API
-	#3. Hollistic analyses - games scouted, played, won
+	#3. Holistic analyses - games scouted, played, won
 	#4. MatchEvent analyses
 	#5. Compatibility analyses
 	#6. Future predictions / z-score / pick-ban
@@ -284,7 +284,7 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	matchnums = []
 	scores = []
 
-	Dir.glob("public/Teams/"+teamNumber.to_s+"/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json") do |filename|
+	Dir.glob("public/Teams/"+teamnumber.to_s+"/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json") do |filename|
 		filenames << filename
 		pitfilenames << filename
 	end
@@ -303,9 +303,11 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 		end #end if pitfilenames.size
 		if teammatchfilenames.size #If there are match files
 			teammatchfilenames.each do |filename| #Go through the files
+				puts "I am going through #{filename}"
 				tempjson = retrieveJSON(filename) #Convert them to json
 				if tempjson['matchEvents'] #If this json has a list of match events
 					tempjson['matchEvents'].each do |matchevent| #Go through the match events
+						puts "I am looking at #{matchevent}"
 						matchevents << matchevent #Add the matchevents to an array of team's match events
 					end #end matchevents foreach
 				end #end if tempjson['matchEvents']
@@ -335,13 +337,14 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 end
 
 def analyzeTeamInMatch(teamnum, matchnum, eventname)
-	#specific match-by-match, instead of hollistic
+	#specific match-by-match, instead of holistic
 end
 
 def sortMatchEvents(matchevents = [])
 	#receive an array of match events
 	#return a hash of arrays of match events
 	#sort using sEventName
+	puts "Sort match events"
 	sortedevents = {}
 	matchevents.each do |matchevent|
 		key = matchevent['sEventName']
@@ -350,6 +353,7 @@ def sortMatchEvents(matchevents = [])
 			sortedevents[key] = [] #Initialize array to hold multiple matchevents
 		end
 		sortedevents[key] << val #Add matchevent to array
+		puts "We now have #{key}: #{sortedevents[key]}"
 	end
 	sortedevents
 	
@@ -360,11 +364,19 @@ def analyzeSortedEvents(sortedevents = [])
 	#receive an array of relevant match events
 	#return a hash of analytics
 	analyzed = {}
+	puts "Analyze match events"
 
+	#Unpack sorted events
 	gear_score = sortedevents['GEAR_SCORE'] #array of all gear_score matchevents
 	gear_load = sortedevents['GEAR_LOAD']
 	gear_drop = sortedevents['GEAR_DROP']
 
+	#Create empty arrays if some events weren't used
+	gear_score = [] unless gear_score
+	gear_load = [] unless gear_load
+	gear_drop = [] unless gear_drop
+
+	puts "Look at this #{gear_score}, its length is #{gear_score.length}"
 	if gear_load.length > 0
 		gScorePerLoad = gear_score.length / gear_load.length
 		gDropPerLoad = gear_drop.length / gear_load.length 
@@ -374,7 +386,7 @@ def analyzeSortedEvents(sortedevents = [])
 	end
 
 	analyzed['dGearAccuracy'] = gScorePerLoad
-
+	puts "Gear accuracy #{analyzed['dGearAccuracy']}"
 	analyzed
 
 	#games scouted, winrate

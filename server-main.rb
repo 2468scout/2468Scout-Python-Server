@@ -180,7 +180,8 @@ end
 
 post '/postTeamMatch' do # eventcode, teamnuber, matchnumber, all matchevents
   begin
-    saveTeamMatchInfo(params['obj'])
+    #saveTeamMatchInfo(params['obj'])
+    saveTeamMatchInfo(request.body.string)
     # EXPERIMENTAL: saveMatchInfo(??) for simulations
     status 200
   rescue => e
