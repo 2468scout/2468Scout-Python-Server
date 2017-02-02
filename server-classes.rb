@@ -250,10 +250,11 @@ end
 ################BEGIN ANALYTICS#################
 ################################################
 
-$rawscores = {}
-#{CASJ: [], ABCA: [], etc, add as needed?}
-#initialize from the event file?
-#alternatively, have one global variable to control what event is preloaded (NOT RECOMMENDED)
+$scoresjson = {}
+$qualdetailsjson = {}
+$playoffetailsjson = {}
+$ranksjson = {}
+#{'CASJ': {}, 'ABCA': {}, etc}
 
 def updateEventFromAPI(eventcode,lastmodified)
 	#reqapi for all the latest data
@@ -263,8 +264,23 @@ def updateEventFromAPI(eventcode,lastmodified)
 end
 
 def updateScores(eventcode)
-	#reqapi for the matches of an event
-	#useful for winrates, scores, RP, rankings
+	puts "Begin update scores"
+	matches = reqapi("matches/#{eventcode}") #Provides scores, teams
+	puts "We got matches look #{matches}"
+	#qualdetails = reqapi("scores/#{eventcode}/qual") 
+	#playoffdetails = reqapi("scores/#{eventcode}/playoff") #Data sweet data! Subject to change.
+	#puts "We got qualdetails look #{qualdetails}"
+	$scoresjson[eventcode] = JSON.parse(matches)
+	#$qualdetailsjson[eventcode] = JSON.parse(qualdetails)
+	#$playoffdetailsjson[eventcode] = JSON.parse(playoffdetails)
+	
+	#If-Modified-Since is very important here if we can implement it
+	#So is the parameter start= for matches we already have
+end
+
+def updateRanks(eventcode)
+	ranks = reqapi("rankings/#{eventcode}")
+	ranksjson[eventcode] = JSON.parse(ranks)
 end
 
 def analyzeTeamAtEvent(teamnumber, eventcode)
@@ -338,9 +354,7 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 		end #end if teammatchfilenames.size
 	end #end if filenames.size
 
-
-	#updateScores(eventcode)
-
+	updateScores(eventcode)
 
 	#Analyze match events
 	sortedevents = sortMatchEvents(matchevents) #Sort by what happens in each event
@@ -411,8 +425,8 @@ def analyzeSortedEvents(sortedevents = [])
 	analyzed['dGearAccuracy'] = gScorePerLoad
 	analyzed['iGearsScored'] = gear_score.length
 	puts "Overall gear accuracy: #{analyzed['dGearAccuracy']}"
-	puts "Total gears scored: #{iGearsScored}"
-	
+	puts "Total gears scored: #{analyzed['iGearsScored']}"
+
 	analyzed
 
 	#games scouted, winrate
