@@ -276,6 +276,8 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	#6. Future predictions / z-score / pick-ban
 	#7. Upcoming matches
 
+	puts "Begin analysis for #{teamnumber} at #{eventcode}"
+
 	filenames = [] #Names of all relevant files
 	pitfilenames = [] #Files for pit scouting
 	teammatchfilenames = [] #Files for match scouting
@@ -296,6 +298,7 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 		#combine similar json objects into arrays
 		if pitfilenames.size #If there are pit files
 			pitfilenames.each do |filename| #Go through the files
+				puts "I am going through #{filename}"
 				tempjson = retrieveJSON(filename) #Convert them to json
 				#combine pit stuff (client-dependent)
 				#until we know what is being scouted from the pit, ignore this for now
@@ -307,7 +310,6 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 				tempjson = retrieveJSON(filename) #Convert them to json
 				if tempjson['matchEvents'] #If this json has a list of match events
 					tempjson['matchEvents'].each do |matchevent| #Go through the match events
-						puts "I am looking at #{matchevent}"
 						matchevents << matchevent #Add the matchevents to an array of team's match events
 					end #end matchevents foreach
 				end #end if tempjson['matchEvents']
@@ -376,7 +378,6 @@ def analyzeSortedEvents(sortedevents = [])
 	gear_load = [] unless gear_load
 	gear_drop = [] unless gear_drop
 
-	puts "Look at this #{gear_score}, its length is #{gear_score.length}"
 	if gear_load.length > 0
 		gScorePerLoad = gear_score.length / gear_load.length
 		gDropPerLoad = gear_drop.length / gear_load.length 

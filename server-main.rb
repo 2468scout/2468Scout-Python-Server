@@ -147,7 +147,7 @@ get '/getTeamMatch' do #Return a JSON of match data for a particular team?? (idk
     eventcode = params['eventCode']
     teamnumber = params['teamNumber']
     matchnumber = params['matchNumber']
-    filename = "public/data/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
+    filename = "public/TeamMatches/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
     retrieveJSON(filename)
   rescue => e
     puts e
