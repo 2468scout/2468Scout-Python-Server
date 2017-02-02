@@ -282,9 +282,16 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	pitfilenames = [] #Files for pit scouting
 	teammatchfilenames = [] #Files for match scouting
 	
+	#Main data to handle
 	matchevents = []
 	matchnums = []
 	scores = []
+
+	#Qualitative / scout opinions
+	speedscores = [] #Ints: 0-5
+	weightscores = [] #Ints: 0-5
+	roles = [] #Strings: SHOT, GEAR, DEF, AUTO
+	donotpick = [] #Booleans: True/False
 
 	Dir.glob("public/Teams/"+teamnumber.to_s+"/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json") do |filename|
 		filenames << filename
@@ -316,6 +323,17 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 				if tempjson['iMatchNumber'] #If this json has a match number
 					matchnums << tempjson['iMatchNumber'] #Add the matchnumber to an array of team's matchnums
 				end #end if tempjson['iMatchNumber']
+				
+				#Scout opinions - optional parameters
+				speedscores << tempjson['iSpeed'] if tempjson['iSpeed']
+				weightscores << tempjson['iWeight'] if tempjson['iWeight']
+				if tempjson['bDoNotPick']
+					donotpick << true
+				else
+					donotpick << false
+				end
+				roles << tempjson['sRole'] if tempjson['sRole']
+
 			end #end teammatchfilenames foreach
 		end #end if teammatchfilenames.size
 	end #end if filenames.size
@@ -369,25 +387,32 @@ def analyzeSortedEvents(sortedevents = [])
 	puts "Analyze match events"
 
 	#Unpack sorted events
-	gear_score = sortedevents['GEAR_SCORE'] #array of all gear_score matchevents
-	gear_load = sortedevents['GEAR_LOAD']
-	gear_drop = sortedevents['GEAR_DROP']
-
-	#Create empty arrays if some events weren't used
-	gear_score = [] unless gear_score
-	gear_load = [] unless gear_load
-	gear_drop = [] unless gear_drop
+	#If no match events of a type were sent, create an empty array instead
+	#Is there a more efficient way to do this?
+	load_hopper = (sortedevents['LOAD_HOPPER'] if sortedevents['LOAD_HOPPER']) || []
+	high_start = (sortedevents['HIGH_GOAL_START'] if sortedevents['HIGH_GOAL_START']) || []
+	high_stop = (sortedevents['HIGH_GOAL_STOP'] if sortedevents['HIGH_GOAL_STOP']) || []
+	high_miss = (sortedevents['HIGH_GOAL_MISS'] if sortedevents['HIGH_GOAL_MISS']) || []
+	low_start = (sortedevents['LOW_GOAL_START'] if sortedevents['LOW_GOAL_START']) || []
+	low_stop = (sortedevents['LOW_GOAL_STOP'] if sortedevents['LOW_GOAL_STOP']) || []
+	low_miss = (sortedevents['LOW_GOAL_MISS'] if sortedevents['LOW_GOAL_MISS']) || []
+	gear_score = (sortedevents['GEAR_SCORE'] if sortedevents['GEAR_SCORE']) || []
+	gear_load = (sortedevents['GEAR_LOAD'] if sortedevents['GEAR_LOAD']) || []
+	gear_drop = (sortedevents['GEAR_DROP'] if sortedevents['GEAR_DROP']) || []
 
 	if gear_load.length > 0
-		gScorePerLoad = gear_score.length / gear_load.length
-		gDropPerLoad = gear_drop.length / gear_load.length 
+		gScorePerLoad = gear_score.length.to_f / gear_load.length.to_f
+		gDropPerLoad = gear_drop.length.to_f / gear_load.length.to_f
 	else
-		gScorePerLoad = -1
-		gDropPerLoad = -1
+		gScorePerLoad = -1.0
+		gDropPerLoad = -1.0
 	end
 
 	analyzed['dGearAccuracy'] = gScorePerLoad
-	puts "Gear accuracy #{analyzed['dGearAccuracy']}"
+	analyzed['iGearsScored'] = gear_score.length
+	puts "Overall gear accuracy: #{analyzed['dGearAccuracy']}"
+	puts "Total gears scored: #{iGearsScored}"
+	
 	analyzed
 
 	#games scouted, winrate

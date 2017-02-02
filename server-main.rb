@@ -72,6 +72,10 @@ def reqapi(path) #Make sure we don't ask for the same thing too often
     end
 end
 
+
+#Ian's code
+#You can tell because there are no comments LMAO
+
 puts("Begin events initialization")
 eventsString = reqapi('events/')
 #puts("Results from FRCAPI events list: " + eventsString)
@@ -83,7 +87,7 @@ $events["Events"].each do |event|
     $frcEvents << tempEvent
   end
 end
-puts($frcEvents.empty?)
+puts("Is frcEvents empty? #{$frcEvents.empty?}")
 
 $frcEvents.each do |frcevent|
   receivedEvent = {}
