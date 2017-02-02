@@ -46,6 +46,7 @@ def api(path) #Returns the FRC API file for the specified path in JSON format.
       'User-Agent' => "https://github.com/2468scout/2468Scout-Ruby-Server", #Dunno what this is but Isaac did it
       'Authorization' => "Basic #{$token}", #Standard procedure outlined by their API
       'accept' => "application/json" #We want JSON files, so we will ask for JSON
+      #'If-Modified-Since' => ""
     ).read
   rescue => e
   	puts "Something went wrong #{e.class}, message is #{e.message}"
@@ -62,6 +63,7 @@ def reqapi(path) #Make sure we don't ask for the same thing too often
         $requests[req] = {
             data: api(req),
             time: Time.now.to_f
+            #last-modified: request["Last-Modified"]
           }
           $requests[req][:data] #new request so we make a new one and return its data
       end
