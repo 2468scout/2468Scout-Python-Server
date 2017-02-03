@@ -208,7 +208,9 @@ post '/postTeamImage' do
   end
 end
 
+post '/updateEventData' do
 
+end
 
 
 # dummy inputs for testing

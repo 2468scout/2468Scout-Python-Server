@@ -369,16 +369,18 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 
 	#Analyze match events
 	sortedevents = sortMatchEvents(matchevents) #Sort by what happens in each event
-	analysis = analyzeSortedEvents(sortedevents) #Send out to analysis method instead of hard coding
+	analyzedevents = analyzeSortedEvents(sortedevents) #Send out to analysis method instead of hard coding
 
 	#Analyze performance at event
+	avgGearsPerMatch = analyzedevents['iGearsScored'].to_f / matchnums.length.to_f
+	puts "Average gears scored per match #{avgGearsPerMatch}"
 
 	#Analyze performance with and against other teams at event
 
 
 	#{"filesFound" => filenames}.to_json
 	#{'matchEvents' => matchevents}.to_json
-	analysis.to_json
+	analyzedevents.to_json
 end
 
 def analyzeTeamInMatch(teamnum, matchnum, eventname)
@@ -414,16 +416,18 @@ def analyzeSortedEvents(sortedevents = [])
 	#Unpack sorted events
 	#If no match events of a type were sent, create an empty array instead
 	#Is there a more efficient way to do this?
-	load_hopper = (sortedevents['LOAD_HOPPER'] if sortedevents['LOAD_HOPPER']) || []
-	high_start = (sortedevents['HIGH_GOAL_START'] if sortedevents['HIGH_GOAL_START']) || []
-	high_stop = (sortedevents['HIGH_GOAL_STOP'] if sortedevents['HIGH_GOAL_STOP']) || []
-	high_miss = (sortedevents['HIGH_GOAL_MISS'] if sortedevents['HIGH_GOAL_MISS']) || []
-	low_start = (sortedevents['LOW_GOAL_START'] if sortedevents['LOW_GOAL_START']) || []
-	low_stop = (sortedevents['LOW_GOAL_STOP'] if sortedevents['LOW_GOAL_STOP']) || []
-	low_miss = (sortedevents['LOW_GOAL_MISS'] if sortedevents['LOW_GOAL_MISS']) || []
-	gear_score = (sortedevents['GEAR_SCORE'] if sortedevents['GEAR_SCORE']) || []
-	gear_load = (sortedevents['GEAR_LOAD'] if sortedevents['GEAR_LOAD']) || []
-	gear_drop = (sortedevents['GEAR_DROP'] if sortedevents['GEAR_DROP']) || []
+
+	#load_hopper = (sortedevents['LOAD_HOPPER'] if sortedevents['LOAD_HOPPER']) || []
+	load_hopper = [] if (load_hopper = sortedevents['LOAD_HOPPER']).nil?
+	high_start = [] if (high_start = sortedevents['HIGH_GOAL_START']).nil?
+	high_stop = [] if (high_stop = sortedevents['HIGH_GOAL_STOP']).nil?
+	high_miss = [] if (high_miss = sortedevents['HIGH_GOAL_MISS']).nil?
+	low_start = [] if (low_start = sortedevents['LOW_GOAL_START']).nil?
+	low_stop = [] if (low_stop = sortedevents['LOW_GOAL_STOP']).nil?
+	low_miss = [] if (low_miss = sortedevents['LOW_GOAL_MISS']).nil?
+	gear_score = [] if (gear_score = sortedevents['GEAR_SCORE']).nil?
+	gear_load = [] if (gear_score = sortedevents['GEAR_LOAD']).nil?
+	gear_drop = [] if (gear_score = sortedevents['GEAR_DROP']).nil?
 
 	if gear_load.length > 0
 		gScorePerLoad = gear_score.length.to_f / gear_load.length.to_f
@@ -441,5 +445,8 @@ def analyzeSortedEvents(sortedevents = [])
 	analyzed
 
 	#games scouted, winrate
+end
 
+def matchScoreTimeline(sortedevents)
+	#test
 end
