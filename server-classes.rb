@@ -27,6 +27,11 @@ class ScheduleItem
   end
 end
 
+class ScoreScout
+  def initialize()
+  end
+end
+
 class FRCEvent #one for each event  
   def initialize(eventName, eventCode)
     @sEventName = eventName #the long name of the event
