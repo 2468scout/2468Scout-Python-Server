@@ -2,9 +2,9 @@
 The entire bee movie script except every bee is replaced with useful data and analytics.
 
 # CONTRIBUTORS
-Lauren Wang
-Ian Hunicke-Smith
-Honorary mention to the resident Ruby wizard Michael Watson
+Lauren Wang,
+Ian Hunicke-Smith,
+Honorable mention to the resident Ruby wizard Michael Watson
 
 # GENERAL PLAN
 * Interaction with FRC API and basic get/post requests by week 1
