@@ -39,41 +39,74 @@ $events = {} #All events this season, from API
 
 #OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
-def api(path) #Returns the FRC API file for the specified path in JSON format.
+#$cache = {} #Stuff that the clients are asking us for
+
+def api(path,lastmodified = nil) #Returns the FRC API file for the specified path in JSON format.
+  #Warning: api() returns an HTTP response while reqapi() returns a JSON string.
   begin
   	puts "I am accessing the API at path #{path}"
-    open("#{$server}#{path}", #https://frc-api. ... .org/v.2.0/ ... /the thing we want
-      'User-Agent' => "https://github.com/2468scout/2468Scout-Ruby-Server", #Dunno what this is but Isaac did it
+  	options = {  'User-Agent' => "https://github.com/2468scout/2468Scout-Ruby-Server", #Dunno what this is but Isaac did it
       'Authorization' => "Basic #{$token}", #Standard procedure outlined by their API
       'accept' => "application/json" #We want JSON files, so we will ask for JSON
-      #'If-Modified-Since' => ""
-    ).read
+ 	}
+ 	#FMS-OnlyModifiedSince will return just a 304
+ 	#If-Modified-Since will return a 200 no matter what, for some reason
+  	options['FMS-OnlyModifiedSince'] = lastmodified if lastmodified
+    #puts options['If-Modified-Since']
+    #open("#{$server}#{path}", options).read
+    toreturn = {}
+    open("#{$server}#{path}", options) do |response|
+    	body = ""
+    	response.each_line do |line|
+    		body << line.to_s
+    	end
+    	#response.base_uri.to_s
+    	toreturn = OpenStruct.new(:body => body, :meta => response.meta, :status => response.status)
+    	#must create a persistent object out of the response, as response is not accessible outside this method
+    end
+    toreturn
   rescue => e
   	puts "Something went wrong #{e.class}, message is #{e.message}"
-    return '{}' #If error, return empty JSON-ish.
+    toreturn = '{}'
+    if (e.message.include? '304') 
+    	toreturn = OpenStruct.new(:body => '{}', :status => ['304','Not Modified'])
+	end
+	toreturn #If error, return empty JSON-ish, or 304 if 304
   end
 end
 
+
 def reqapi(path) #Make sure we don't ask for the same thing too often
+  #Returns a string equivalent to the body of the request
   begin
       req = path
       if $requests[req] && ($requests[req][:time] + 120 > Time.now.to_f) 
-        $requests[req][:data] #we requested the same thing within 2 minutes
+        #$requests[req][:data] 
+        #We requested the same thing within 2 minutes
+      	puts "Old request! Use lastmodified"
+      	myrequest = api(req, $requests[req][:lastmodified])
       else
-        $requests[req] = {
-            data: api(req),
-            time: Time.now.to_f
-            #last-modified: request["Last-Modified"]
-          }
-          $requests[req][:data] #new request so we make a new one and return its data
+      	puts "New request! Ignore lastmodified"
+      	myrequest = api(req)
       end
-    rescue
+
+      puts "My request's code is #{myrequest.status}"
+
+      unless myrequest.status[0].to_s === '304'
+      	puts "it has been modified"
+        $requests[req] = { #new request so create new request
+            data: myrequest,
+            time: Time.now.to_f,
+            lastmodified: myrequest.meta["last-modified"]
+          }
+      end
+      $requests[req][:data].body #return data to the method caller
+    rescue => e
       # status 404
-      puts("Status 404")
+      puts "Reqapi messed up #{e.message}"
       return '{}'
     end
 end
-
 
 #Ian's code
 #You can tell because there are no comments LMAO
@@ -209,7 +242,7 @@ post '/postTeamImage' do
 end
 
 post '/updateEventData' do
-
+	#Include a param to override reqapi and just call api directly
 end
 
 

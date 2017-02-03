@@ -320,11 +320,11 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	roles = [] #Strings: SHOT, GEAR, DEF, AUTO
 	donotpick = [] #Booleans: True/False
 
-	Dir.glob("public/Teams/"+teamnumber.to_s+"/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json") do |filename|
+	Dir.glob("public/Teams/#{teamnumber}/#{eventcode}_Pit_Team#{teamnumber}.json") do |filename|
 		filenames << filename
 		pitfilenames << filename
 	end
-	Dir.glob("public/TeamMatches/"+eventcode+"_TeamMatch*_Team"+teamnumber.to_s+".json") do |filename|
+	Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch*_Team#{teamnumber}.json") do |filename|
 		filenames << filename
 		teammatchfilenames << filename
 	end
@@ -354,11 +354,8 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 				#Scout opinions - optional parameters
 				speedscores << tempjson['iSpeed'] if tempjson['iSpeed']
 				weightscores << tempjson['iWeight'] if tempjson['iWeight']
-				if tempjson['bDoNotPick']
-					donotpick << true
-				else
-					donotpick << false
-				end
+				
+				donotpick << (tempjson['bDonotPick'] ? true : false)
 				roles << tempjson['sRole'] if tempjson['sRole']
 
 			end #end teammatchfilenames foreach
@@ -449,4 +446,9 @@ end
 
 def matchScoreTimeline(sortedevents)
 	#test
+end
+
+def matchString(teammatch)
+	#Make a table: timestamps, match event type, team, human-readable note
+	#This way we can see a match at a glance
 end
