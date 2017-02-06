@@ -13,6 +13,7 @@ require 'uri'     #Uniform Resource Identifiers (interact with FRC API and clien
 require 'openssl' #Not sure if we need this but we've been having some SSL awkwardness
 require 'ostruct' #Turn JSON into instant objects! Huzzah!
 require_relative 'server-classes.rb'
+require_relative 'server-analysis.rb'
 #bundle install
 
 ENV['SSL_CERT_FILE'] = 'human/cacert.pem'
@@ -219,9 +220,15 @@ end
 
 post '/postTeamMatch' do # eventcode, teamnuber, matchnumber, all matchevents
   begin
-    #saveTeamMatchInfo(params['obj'])
-    saveTeamMatchInfo(request.body.string)
-    # EXPERIMENTAL: saveMatchInfo(??) for simulations
+  	#Save team info
+    saveTeamMatchInfo(request.body)
+
+    #Rolling analysis
+    jsondata = JSON.parse(request.body)
+	eventcode = jsondata['sEventCode']
+	teamnumber = jsondata['iTeamNumber']
+    analyzeTeamAtEvent(teamnumber, eventcode)
+
     status 200
   rescue => e
     puts "SOILED IT #{e.class}, message is #{e.message}"
