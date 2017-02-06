@@ -236,21 +236,24 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	qpcontrib = 0.0 #QP Contribution: the flat amount of points they contribute in qualifiers, including auto / fuel
 	pcontrib = 0.0 #Playoffs Contribution: the amount of points they contribute in playoffs, including weighted RP bonus
 	#NOTE: RPContrib DOES NOT include the 0, 1, or 2 RP earned from qualifier results
+	#Partial credit is awarded for not enough gears, or not enough fuel; but gears and fuel can each contribute a max of 1.0
+
+	totalgearmtaches = 0 #How many matches the team has played in which they scored at least one gear
 
 	#Set constants
 	#In the future, if client is willing, we may want to make it so the viewer can request calculation with different constants!
 	prepop_gears = 3 #Prepopulated gears, usually constant but "may change"
-	total_gears_needed = 16 - prepop_gears #To turn all rotors #1, 2, 5 (-1), 8 (-2)
+	total_gears_needed = 16 - prepop_gears #To turn all rotors #1 + 2 + 5 (- 1) + 8 (- 2)
 	avg_gears_needed = total_gears_needed / 4 #To turn one rotor
-	rpcontrib_per_autogear, rpcontrib_per_telegear = (1.0 / total_gears_needed), (1.0 / total_gears_needed)
-	qpcontrib_per_autogear = (60.0 / avg_gears_needed)
-	qpcontrib_per_telegear = (40.0 / avg_gears_needed )
-	pcontrib_per_autogear = (100.0 / total_gears_needed) + (60.0 / avg_gears_needed)*4
-	pcontrib_per_telegear = (100.0 / total_gears_needed) + (40.0 / avg_gears_needed)*4 
-	qpcontrib_per_touchpad, pcontrib_per_touchpad = 50.0, 50.0 #End w/touchpad (requires climb)
-	qpcontrib_per_baseline, pcontrib_per_baseline = 5.0, 5.0 #Autonomous movement
+	rp_per_autogear, rp_per_telegear = (1.0 / total_gears_needed), (1.0 / total_gears_needed)
+	qp_per_autogear = (60.0 / avg_gears_needed)
+	qp_per_telegear = (40.0 / avg_gears_needed )
+	p_per_autogear = (100.0 / total_gears_needed) + (60.0 / avg_gears_needed)*4
+	p_per_telegear = (100.0 / total_gears_needed) + (40.0 / avg_gears_needed)*4 
+	qp_per_touchpad, p_per_touchpad = 50.0, 50.0 #End w/touchpad (requires climb)
+	qp_per_baseline, p_per_baseline = 5.0, 5.0 #Autonomous movement
 	#Fuel goes here
-	#WARNING: A gear in autonomous is worth slightly more than in teleop
+	#NOTE: A gear in autonomous is worth slightly more than in teleop.
 	#This is because completing a rotor gives 60 points in auto, but 40 in tele 
 
 	#Unpack sorted events
@@ -264,7 +267,9 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	gear_score = [] if (gear_score = sortedevents['GEAR_SCORE']).nil?
 	gear_load = [] if (gear_score = sortedevents['GEAR_LOAD']).nil?
 	gear_drop = [] if (gear_score = sortedevents['GEAR_DROP']).nil?
-
+	climb_success = [] if (climb_success = sortedevents['CLIMB_SUCCESS']).nil?
+	climb_fail = [] if (climb_fail = sortedevents['CLIMB_FAIL']).nil?
+	touchpad = [] if (touchpad = sortedevents['TOUCHPAD']).nil?
 
 	#Begin working with numbers
 
@@ -283,18 +288,36 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	puts "Average gears scored per match #{analysis['avgGearsPerMatch']}"
 
 	if gear_score.length > 0
+		gearmatches = {} #Key: matchnum, val: {points to contrib}
+		rptocontrib, qptocontrib, ptocontrib = 0, 0, 0
 		gear_score.each do |event|
+			temp = event['iMatchNumber']
+			gearmatches[temp] = {} unless gearmatches[temp]
 			if event['bInAutonomous']
-				rpcontrib += rpcontrib_per_autogear
-				qpcontrib += qpcontrib_per_autogear
-				pcontrib += pcontrib_per_autogear
+				gearmatches[temp]['rptocontrib'] += rp_per_autogear
+				gearmatches[temp]['qptocontrib'] += qp_per_autogear
+				gearmatches[temp]['ptocontrib'] += p_per_autogear
 			else
-				rpcontrib += rpcntrib_per_telegear
-				qpcontrib += qpcontrib_per_telegear
-				pcontrib += pcontrib_per_telegear
+				gearmatches[temp]['rptocontrib'] += rp_per_telegear
+				gearmatches[temp]['qptocontrib'] += qp_per_telegear
+				gearmatches[temp]['ptocontrib'] += p_per_telegear
 			end
+			
+			#Safeguards to prevent overvaluing
+			gearmatches[temp]['rptocontrib'] = 1.0 if gearmatches[temp]['rptcontrib'] > 1.0
+			gearmatches[temp]['qptocontrib'] = 240.0 if gearmatches[temp]['qptocontrib'] > 240.0
+			gearmatches[temp]['ptocontrib'] = 340.0 if gearmatches[temp]['ptocontrib'] > 340.0
 		end
+
+		gearmatches.each do |key, val| #Add contribution for each match
+			rpcontrib += gearmatches[key]['rptocontrib']
+			qpcontrib += gearmatches[key]['qptocontrib']
+			pcontrib += gearmatches[key]['ptocontrib']
+		end
+
+		totalgearmatches = gearmatches.length
 	end
+
 
 
 	puts "Total RP Contribution: #{rpcontrib}"
