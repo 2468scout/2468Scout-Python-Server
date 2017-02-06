@@ -204,6 +204,19 @@ get '/getTeamAnalytics' do
   analyzeTeamAtEvent(teamnumber, eventcode)
 end
 
+get '/getTeamMatchExistence' do #Check if a teammatch exists in the server's database, to confirm saving/deletion
+	eventcode = params['eventCode']
+    teamnumber = params['teamNumber']
+    matchnumber = params['matchNumber']
+    filename = "public/TeamMatches/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
+    if File.exists? filename
+    	status 200 #We have the data
+    else
+    	status 404 #We do not have the data
+    end
+end
+
+
 ### POST REQUESTS
 
 post '/postpit' do # Pit scouting (receive team data) #input is an actual string
