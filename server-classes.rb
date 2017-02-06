@@ -292,6 +292,8 @@ def updateScores(eventcode)
 	
 	#If-Modified-Since is very important here if we can implement it
 	#So is the parameter start= for matches we already have
+
+	#INCOMPLETE: This method cannot be finished until the 2017 API is complete
 end
 
 def updateRanks(eventcode)
@@ -309,6 +311,8 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	#7. Upcoming matches
 
 	puts "Begin analysis for #{teamnumber} at #{eventcode}"
+
+	analysis = {} #The hash to be returned as JSON
 
 	filenames = [] #Names of all relevant files
 	pitfilenames = [] #Files for pit scouting
@@ -369,16 +373,20 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 
 	updateScores(eventcode)
 
-	#Analyze match events
-	sortedevents = sortMatchEvents(matchevents) #Sort by what happens in each event
-	analyzedevents = analyzeSortedEvents(sortedevents) #Send out to analysis method instead of hard coding
+	#Analyze performance (winrate, rank, etc)
+	analysis['iNumMatches'] = matchnums.length
 
-	#Analyze performance at event
-	avgGearsPerMatch = analyzedevents['iGearsScored'].to_f / matchnums.length.to_f
-	puts "Average gears scored per match #{avgGearsPerMatch}"
+	#Analyze match events (accuracy, contribution, etc)
+	sortedevents = sortMatchEvents(matchevents) #Sort by what happens in each event
+	analyzedevents = analyzeSortedEvents(sortedevents, matchnums.length) #Send out to analysis method instead of hard coding
+	analyzedevents.each do |key, val|
+		analysis[key] = val
+	end
 
 	#Analyze performance with and against other teams at event
 
+
+	#Predictions
 
 	#{"filesFound" => filenames}.to_json
 	#{'matchEvents' => matchevents}.to_json
@@ -390,8 +398,8 @@ def analyzeTeamInMatch(teamnum, matchnum, eventname)
 end
 
 def sortMatchEvents(matchevents = [])
-	#receive an array of match events
-	#return a hash of arrays of match events
+	#Receives an array of match events
+	#Returns a hash of arrays of match events
 	#sort using sEventName
 	puts "Sort match events"
 	sortedevents = {}
@@ -409,17 +417,37 @@ def sortMatchEvents(matchevents = [])
 	#sortedevents['GEAR_SCORE'] => [matchevent1, matchevent2, ...] etc
 end
 
-def analyzeSortedEvents(sortedevents = [])
-	#receive an array of relevant match events
-	#return a hash of analytics
+def analyzeSortedEvents(sortedevents = [], nummatches)
+	#Receives an array of relevant match events
+	#Returns a hash of analytics
 	analyzed = {}
 	puts "Analyze match events"
 
-	#Unpack sorted events
-	#If no match events of a type were sent, create an empty array instead
-	#Is there a more efficient way to do this?
+	contribution = 0.0 #Contribution: The total, fully weighted estimate of how well a team will do
+	#AKA z-score
 
-	#load_hopper = (sortedevents['LOAD_HOPPER'] if sortedevents['LOAD_HOPPER']) || []
+	rpcontrib = 0.0 #RP Contribution: 1/3 of the amount of ranking points they would score if they had 3 robots
+	qpcontrib = 0.0 #QP Contribution: the flat amount of points they contribute in qualifiers, including auto / fuel
+	pcontrib = 0.0 #Playoffs Contribution: the amount of points they contribute in playoffs, including weighted RP bonus
+	#NOTE: RPContrib DOES NOT include the 0, 1, or 2 RP earned from qualifier results
+
+	#Set constants
+	#In the future, if client is willing, we may want to make it so the viewer can request calculation with different constants!
+	prepop_gears = 3 #Prepopulated gears, usually constant but "may change"
+	total_gears_needed = 16 - prepop_gears #To turn all rotors #1, 2, 5 (-1), 8 (-2)
+	avg_gears_needed = total_gears_needed / 4 #To turn one rotor
+	rpcontrib_per_autogear, rpcontrib_per_telegear = (1.0 / total_gears_needed), (1.0 / total_gears_needed)
+	qpcontrib_per_autogear = (60.0 / avg_gears_needed)
+	qpcontrib_per_telegear = (40.0 / avg_gears_needed )
+	pcontrib_per_autogear = (100.0 / total_gears_needed) + (60.0 / avg_gears_needed)*4
+	pcontrib_per_telegear = (100.0 / total_gears_needed) + (40.0 / avg_gears_needed)*4 
+	qpcontrib_per_touchpad, pcontrib_per_touchpad = 50.0, 50.0 #End w/touchpad (requires climb)
+	qpcontrib_per_baseline, pcontrib_per_baseline = 5.0, 5.0 #Autonomous movement
+	#Fuel goes here
+	#WARNING: A gear in autonomous is worth slightly more than in teleop
+	#This is because completing a rotor gives 60 points in auto, but 40 in tele 
+
+	#Unpack sorted events
 	load_hopper = [] if (load_hopper = sortedevents['LOAD_HOPPER']).nil?
 	high_start = [] if (high_start = sortedevents['HIGH_GOAL_START']).nil?
 	high_stop = [] if (high_stop = sortedevents['HIGH_GOAL_STOP']).nil?
@@ -431,6 +459,9 @@ def analyzeSortedEvents(sortedevents = [])
 	gear_load = [] if (gear_score = sortedevents['GEAR_LOAD']).nil?
 	gear_drop = [] if (gear_score = sortedevents['GEAR_DROP']).nil?
 
+
+	#Begin working with numbers
+
 	if gear_load.length > 0
 		gScorePerLoad = gear_score.length.to_f / gear_load.length.to_f
 		gDropPerLoad = gear_drop.length.to_f / gear_load.length.to_f
@@ -438,12 +469,32 @@ def analyzeSortedEvents(sortedevents = [])
 		gScorePerLoad = -1.0
 		gDropPerLoad = -1.0
 	end
-
-	analyzed['dGearAccuracy'] = gScorePerLoad
+	analyzed['fGearAccuracy'] = gScorePerLoad
 	analyzed['iGearsScored'] = gear_score.length
-	puts "Overall gear accuracy: #{analyzed['dGearAccuracy']}"
+	analyzed['avgGearsPerMatch'] = analyzed['iGearsScored'].to_f / nummatches.to_f
+	puts "Overall gear accuracy: #{analyzed['fGearAccuracy']}"
 	puts "Total gears scored: #{analyzed['iGearsScored']}"
+	puts "Average gears scored per match #{analysis['avgGearsPerMatch']}"
 
+	if gear_score.length > 0
+		gear_score.each do |event|
+			if event['bInAutonomous']
+				rpcontrib += rpcontrib_per_autogear
+				qpcontrib += qpcontrib_per_autogear
+				pcontrib += pcontrib_per_autogear
+			else
+				rpcontrib += rpcntrib_per_telegear
+				qpcontrib += qpcontrib_per_telegear
+				pcontrib += pcontrib_per_telegear
+			end
+		end
+	end
+
+
+	puts "Total RP Contribution: #{rpcontrib}"
+	puts "Total QP Contribution: #{qpcontrib}"
+	puts "Total Playoffs Contribution: #{pcontrib}"
+	
 	analyzed
 
 	#games scouted, winrate
