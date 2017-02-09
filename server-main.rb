@@ -190,7 +190,7 @@ get '/getTeamMatch' do #Return a JSON of match data for a particular team?? (idk
     filename = "public/TeamMatches/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
     retrieveJSON(filename)
   rescue => e
-    puts e
+    puts "Error in getteammatch #{e.class}, message is #{e.message}"
     status 400
     return '{}'
   end
@@ -244,10 +244,19 @@ post '/postTeamMatch' do # eventcode, teamnuber, matchnumber, all matchevents
 
     status 200
   rescue => e
-    puts "SOILED IT #{e.class}, message is #{e.message}"
-    puts e.message
+    puts "Error in postteammatch #{e.class}, message is #{e.message}"
     status 400
   end
+end
+
+post '/postMatchScores' do
+	begin
+		#Real-time scorekeeping
+		status 200
+	rescue => e
+		puts "Error in postmatchscores #{e.class}, message is #{e.message}"
+		status 400
+	end
 end
 
 post '/postTeamImage' do
