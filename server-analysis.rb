@@ -232,12 +232,13 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	contribution = 0.0 #Contribution: The total, fully weighted estimate of how well a team will do
 	#AKA z-score
 
-	rpcontrib = 0.0 #RP Contribution: 1/3 of the amount of ranking points they would score if they had 3 robots
+	rpcontrib = 0.0 #RP Contribution: 1/3 of the amount of ranking points they would have contributed if they had 3 robots
 	qpcontrib = 0.0 #QP Contribution: the flat amount of points they contribute in qualifiers, including auto / fuel
 	pcontrib = 0.0 #Playoffs Contribution: the amount of points they contribute in playoffs, including weighted RP bonus
 	#NOTE: RPContrib DOES NOT include the 0, 1, or 2 RP earned from qualifier results
 	#Partial credit is awarded for not enough gears, or not enough fuel; but gears and fuel can each contribute a max of 1.0
 
+	totalmatches = nummatches #How many matches we have scouted the team in
 	totalgearmtaches = 0 #How many matches the team has played in which they scored at least one gear
 
 	#Set constants
@@ -282,7 +283,7 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	end
 	analyzed['fGearAccuracy'] = gScorePerLoad
 	analyzed['iGearsScored'] = gear_score.length
-	analyzed['avgGearsPerMatch'] = analyzed['iGearsScored'].to_f / nummatches.to_f
+	analyzed['fAvgGearsPerMatch'] = analyzed['iGearsScored'].to_f / nummatches.to_f
 	puts "Overall gear accuracy: #{analyzed['fGearAccuracy']}"
 	puts "Total gears scored: #{analyzed['iGearsScored']}"
 	puts "Average gears scored per match #{analysis['avgGearsPerMatch']}"
@@ -317,13 +318,19 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 
 		totalgearmatches = gearmatches.length
 	end
-
+	analyzed['iTotalGearMatches'] = totalgearmatches
 
 
 	puts "Total RP Contribution: #{rpcontrib}"
 	puts "Total QP Contribution: #{qpcontrib}"
 	puts "Total Playoffs Contribution: #{pcontrib}"
 	
+	#Assign these at the very end
+	analyzed['fRPContrib'] = rpcontrib / nummatches.to_f
+	analyzed['fQPContrib'] = qpcontrib / nummatches.to_f
+	analyzed['fPlayoffContrib'] = pcontrib / nummatches.to_f
+	analyzed['fContribution'] = contribution
+
 	analyzed
 
 	#games scouted, winrate
