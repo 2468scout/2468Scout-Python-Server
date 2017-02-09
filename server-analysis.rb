@@ -203,12 +203,31 @@ def analyzeTeamInMatch(teamnum, matchnum, eventname)
 	#specific match-by-match, instead of holistic
 end
 
+def guessHighFuel(startevents, stopevents, misses, scores)
+	puts "Guess high fuel"
+	result = 0.0
+	deviation = 0.0
+	intervals = [] #[[start, stop],[start, stop]]
+	if (startevents.length - stopevents.length).abs > 1 #Scout client error
+		puts "WARNING: There difference between number of stopevents and startevents is greater than 1"
+	end
+
+	puts "I think that #{result} fuel was scored within a #{deviation} uncertainty."
+	return result
+end
+
+def guessLowFuel(startevents, stopevents, misses, scores)
+	puts "Guess low fuel"
+	return 0
+end
+
 def sortMatchEvents(matchevents = [])
 	#Receives an array of match events
 	#Returns a hash of arrays of match events
 	#sort using sEventName
 	puts "Sort match events"
 	sortedevents = {}
+	autoevents = []
 	matchevents.each do |matchevent|
 		key = matchevent['sEventName']
 		val = matchevent
@@ -217,7 +236,11 @@ def sortMatchEvents(matchevents = [])
 		end
 		sortedevents[key] << val #Add matchevent to array
 		puts "We now have #{key}: #{sortedevents[key]}"
+		if val['bInAutonomous']
+			autoevents << val
+		end
 	end
+	sortedevents["AUTOSTUFF"] = autoevents if autoevents.length > 0 #Additional separate array to isolate autonomous
 	sortedevents
 	
 	#sortedevents['GEAR_SCORE'] => [matchevent1, matchevent2, ...] etc
@@ -240,6 +263,8 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 
 	totalmatches = nummatches #How many matches we have scouted the team in
 	totalgearmtaches = 0 #How many matches the team has played in which they scored at least one gear
+	totaltouchpadmatches = 0
+	totalbaselinematches = 0
 
 	#Set constants
 	#In the future, if client is willing, we may want to make it so the viewer can request calculation with different constants!
@@ -258,6 +283,7 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	#This is because completing a rotor gives 60 points in auto, but 40 in tele 
 
 	#Unpack sorted events
+	#Stuff that scores points
 	load_hopper = [] if (load_hopper = sortedevents['LOAD_HOPPER']).nil?
 	high_start = [] if (high_start = sortedevents['HIGH_GOAL_START']).nil?
 	high_stop = [] if (high_stop = sortedevents['HIGH_GOAL_STOP']).nil?
@@ -271,9 +297,46 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	climb_success = [] if (climb_success = sortedevents['CLIMB_SUCCESS']).nil?
 	climb_fail = [] if (climb_fail = sortedevents['CLIMB_FAIL']).nil?
 	touchpad = [] if (touchpad = sortedevents['TOUCHPAD']).nil?
+	baseline = [] if (baseline = sortedevents['BASELINE']).nil?
+	#Qualities about the robot
+	defending = [] if (defending = sortedevents['DEFENDING']).nil?
+	carry_capacity = [] if (carry_capacity = sortedevents['CARRY_CAPACITY']).nil?
+	speed = [] if (speed = sortedevents['SPEED']).nil?
+
+	#Inaccurate stuff
+	#highfuel = guessHighFuel(high_start, high_stop, high_miss, scores)
+	#lowfuel = guessLowFuel(low_start, low_stop, low_miss, scores)
 
 	#Begin working with numbers
+	###AUTONOMOUS BASELINE###
+	if baseline.length > 0
+		basematches = {} #Key: matchnum, val: {points to contrib}
+		qptocontrib, ptocontrib = 0.0, 0.0
+		baseline.each do |event|
+			temp = event['iMatchNumber']
+			basematches[temp] = {} unless basematches[temp]
+			if event['bInAutonomous']
+				basematches[temp]['qptocontrib'] += qp_per_baseline
+				basematches[temp]['ptocontrib'] += p_per_baseline
+			end
+			
+			#Safeguards to prevent overvaluing
+			basematches[temp]['qptocontrib'] = 5.0 if basematches[temp]['qptocontrib'] > 50.0
+			basematches[temp]['ptocontrib'] = 5.0 if basematches[temp]['ptocontrib'] > 50.0
+		end
 
+		basematches.each do |key, val| #Add contribution for each match
+			#Standard deviation should be calculated here in the future
+
+			qpcontrib += basematches[key]['qptocontrib']
+			pcontrib += basematches[key]['ptocontrib']
+		end
+
+		totalbaselinematches = basematches.length
+	end
+	analyzed['iTotalBaselineMatches'] = totalbaselinematches
+
+	###GEARS###
 	if gear_load.length > 0
 		gScorePerLoad = gear_score.length.to_f / gear_load.length.to_f
 		gDropPerLoad = gear_drop.length.to_f / gear_load.length.to_f
@@ -290,7 +353,7 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 
 	if gear_score.length > 0
 		gearmatches = {} #Key: matchnum, val: {points to contrib}
-		rptocontrib, qptocontrib, ptocontrib = 0, 0, 0
+		rptocontrib, qptocontrib, ptocontrib = 0.0, 0.0, 0.0
 		gear_score.each do |event|
 			temp = event['iMatchNumber']
 			gearmatches[temp] = {} unless gearmatches[temp]
@@ -311,6 +374,8 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 		end
 
 		gearmatches.each do |key, val| #Add contribution for each match
+			#Standard deviation should be calculated here in the future
+
 			rpcontrib += gearmatches[key]['rptocontrib']
 			qpcontrib += gearmatches[key]['qptocontrib']
 			pcontrib += gearmatches[key]['ptocontrib']
@@ -320,11 +385,37 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	end
 	analyzed['iTotalGearMatches'] = totalgearmatches
 
+	###CLIMB###
+	if touchpad.length > 0
+		touchmatches = {} #Key: matchnum, val: {points to contrib}
+		qptocontrib, ptocontrib = 0.0, 0.0
+		touchpad.each do |event|
+			temp = event['iMatchNumber']
+			touchmatches[temp] = {} unless touchmatches[temp]
+			
+			touchmatches[temp]['qptocontrib'] += qp_per_touchpad
+			touchmatches[temp]['ptocontrib'] += p_per_touchpad
+			
+			#Safeguards to prevent overvaluing
+			touchmatches[temp]['qptocontrib'] = 50.0 if touchmatches[temp]['qptocontrib'] > 50.0
+			touchmatches[temp]['ptocontrib'] = 50.0 if touchmatches[temp]['ptocontrib'] > 50.0
+		end
+
+		touchmatches.each do |key, val| #Add contribution for each match
+			#Standard deviation should be calculated here in the future
+
+			qpcontrib += touchmatches[key]['qptocontrib']
+			pcontrib += touchmatches[key]['ptocontrib']
+		end
+
+		totaltouchpadmatches = touchmatches.length
+	end
+	analyzed['iTotalTouchpadMatches'] = totaltouchpadmatches
 
 	puts "Total RP Contribution: #{rpcontrib}"
 	puts "Total QP Contribution: #{qpcontrib}"
 	puts "Total Playoffs Contribution: #{pcontrib}"
-	
+
 	#Assign these at the very end
 	analyzed['fRPContrib'] = rpcontrib / nummatches.to_f
 	analyzed['fQPContrib'] = qpcontrib / nummatches.to_f
@@ -343,4 +434,7 @@ end
 def matchString(teammatch)
 	#Make a table: timestamps, match event type, team, human-readable note
 	#This way we can see a match at a glance
+	output = ""
+
+	output
 end
