@@ -72,27 +72,29 @@ end
 ################BEGIN ANALYTICS#################
 ################################################
 
-$scoresjson = {}
+$scoresjson = {} #'CASJ': [{match},{match}]
 $qualdetailsjson = {}
 $playoffetailsjson = {}
 $ranksjson = {}
-#{'CASJ': {}, 'ABCA': {}, etc}
+#For all of these, format as {'CASJ': {}, 'ABCA': {}, etc}
 
-def updateEventFromAPI(eventcode,lastmodified)
+def updateEventFromAPI(eventcode)
 	#reqapi for all the latest data
-	#first check if-modified-since (I do not know where to get lastmodified atm)
 	#then overwrite all data, in case a correction was made, as it's all the same call anyway
 	#finally, return a success/failure message
 end
 
 def updateScores(eventcode)
 	puts "Begin update scores"
-	matches = reqapi("matches/#{eventcode}") #Provides scores, teams
+	matchresults = reqapi("matches/#{eventcode}") #Provides scores, teams
 	puts "We got matches look #{matches}"
 	#qualdetails = reqapi("scores/#{eventcode}/qual") 
 	#playoffdetails = reqapi("scores/#{eventcode}/playoff") #Data sweet data! Subject to change.
 	#puts "We got qualdetails look #{qualdetails}"
-	$scoresjson[eventcode] = JSON.parse(matches)
+	$scoresjson["#{eventcode}"] = []
+	matchresults["Matches"].each do |matchresult|
+		$scoresjson["#{eventcode}"] << JSON.parse(matchresult)
+	end
 	#$qualdetailsjson[eventcode] = JSON.parse(qualdetails)
 	#$playoffdetailsjson[eventcode] = JSON.parse(playoffdetails)
 	
@@ -100,6 +102,17 @@ def updateScores(eventcode)
 	#So is the parameter start= for matches we already have
 
 	#INCOMPLETE: This method cannot be finished until the 2017 API is complete
+	$scoresjson["#{eventcode}"]
+end
+
+def getScores(eventcode)
+	if $scoresjson["#{eventcode}"] #We already have scores
+		return $scoresjson["#{eventcode}"]
+	elsif updateScores("#{eventcode}") #No scores yet so we will update from API
+		return $scoresjson["#{eventcode}"]
+	else #No scores saved nor available on API
+		return '{}'
+	end
 end
 
 def updateRanks(eventcode)
@@ -196,7 +209,7 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 
 	#{"filesFound" => filenames}.to_json
 	#{'matchEvents' => matchevents}.to_json
-	analyzedevents.to_json
+	analysis.to_json
 end
 
 def analyzeTeamInMatch(teamnum, matchnum, eventname)
@@ -246,11 +259,29 @@ def sortMatchEvents(matchevents = [])
 	#sortedevents['GEAR_SCORE'] => [matchevent1, matchevent2, ...] etc
 end
 
+#Set constants
+#In the future, if client is willing, we may want to make it so the viewer can request calculation with different constants!
+prepop_gears = 3 #Prepopulated gears, usually constant but "may change"
+total_gears_needed = 16 - prepop_gears #To turn all rotors #1 + 2 + 5 (- 1) + 8 (- 2)
+avg_gears_needed = total_gears_needed / 4 #To turn one rotor
+rp_per_autogear, rp_per_telegear = (1.0 / total_gears_needed), (1.0 / total_gears_needed)
+qp_per_autogear = (60.0 / avg_gears_needed)
+qp_per_telegear = (40.0 / avg_gears_needed )
+p_per_autogear = (100.0 / total_gears_needed) + (60.0 / avg_gears_needed)*4
+p_per_telegear = (100.0 / total_gears_needed) + (40.0 / avg_gears_needed)*4 
+qp_per_touchpad, p_per_touchpad = 50.0, 50.0 #End w/touchpad (requires climb)
+qp_per_baseline, p_per_baseline = 5.0, 5.0 #Autonomous movement
+#Fuel goes here
+#NOTE: A gear in autonomous is worth slightly more than in teleop.
+#This is because completing a rotor gives 60 points in auto, but 40 in tele 
+
 def analyzeSortedEvents(sortedevents = [], nummatches)
 	#Receives an array of relevant match events
 	#Returns a hash of analytics
+	analysisstart = Time.now
+	puts "Analyze match events starting at #{analysisstart}"
+
 	analyzed = {}
-	puts "Analyze match events"
 
 	contribution = 0.0 #Contribution: The total, fully weighted estimate of how well a team will do
 	#AKA z-score
@@ -265,22 +296,6 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	totalgearmtaches = 0 #How many matches the team has played in which they scored at least one gear
 	totaltouchpadmatches = 0
 	totalbaselinematches = 0
-
-	#Set constants
-	#In the future, if client is willing, we may want to make it so the viewer can request calculation with different constants!
-	prepop_gears = 3 #Prepopulated gears, usually constant but "may change"
-	total_gears_needed = 16 - prepop_gears #To turn all rotors #1 + 2 + 5 (- 1) + 8 (- 2)
-	avg_gears_needed = total_gears_needed / 4 #To turn one rotor
-	rp_per_autogear, rp_per_telegear = (1.0 / total_gears_needed), (1.0 / total_gears_needed)
-	qp_per_autogear = (60.0 / avg_gears_needed)
-	qp_per_telegear = (40.0 / avg_gears_needed )
-	p_per_autogear = (100.0 / total_gears_needed) + (60.0 / avg_gears_needed)*4
-	p_per_telegear = (100.0 / total_gears_needed) + (40.0 / avg_gears_needed)*4 
-	qp_per_touchpad, p_per_touchpad = 50.0, 50.0 #End w/touchpad (requires climb)
-	qp_per_baseline, p_per_baseline = 5.0, 5.0 #Autonomous movement
-	#Fuel goes here
-	#NOTE: A gear in autonomous is worth slightly more than in teleop.
-	#This is because completing a rotor gives 60 points in auto, but 40 in tele 
 
 	#Unpack sorted events
 	#Stuff that scores points
@@ -329,8 +344,8 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 		basematches.each do |key, val| #Add contribution for each match
 			#Standard deviation should be calculated here in the future
 
-			baseqpcontrib += basematches[key]['qptocontrib']
-			basepcontrib += basematches[key]['ptocontrib']
+			baseqpcontrib += basematches[key]['qptocontrib'] #Use baseqpcontrib instead of qpcontrib
+			basepcontrib += basematches[key]['ptocontrib'] #This way we know what scores came from where
 		end
 
 		qpcontrib += baseqpcontrib
@@ -351,9 +366,9 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	analyzed['fGearAccuracy'] = gScorePerLoad
 	analyzed['iGearsScored'] = gear_score.length
 	analyzed['fAvgGearsPerMatch'] = analyzed['iGearsScored'].to_f / nummatches.to_f
-	puts "Overall gear accuracy: #{analyzed['fGearAccuracy']}"
-	puts "Total gears scored: #{analyzed['iGearsScored']}"
-	puts "Average gears scored per match #{analysis['avgGearsPerMatch']}"
+	puts "*Overall gear accuracy: #{analyzed['fGearAccuracy']}"
+	puts "*Total gears scored: #{analyzed['iGearsScored']}"
+	puts "*Average gears scored per match #{analysis['avgGearsPerMatch']}"
 
 	gearrpcontrib = 0.0
 	gearqpcontrib = 0.0
@@ -364,7 +379,7 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 		gear_score.each do |event|
 			temp = event['iMatchNumber']
 			gearmatches[temp] = {} unless gearmatches[temp]
-			if event['bInAutonomous']
+			if event['bInAutonomous'] #Rotor turning is valued differently depending on when the gear is scored
 				gearmatches[temp]['rptocontrib'] += rp_per_autogear
 				gearmatches[temp]['qptocontrib'] += qp_per_autogear
 				gearmatches[temp]['ptocontrib'] += p_per_autogear
@@ -431,8 +446,22 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	puts "This team has contributed #{touchqpcontrib} QP worth of climb/touchpad points over #{totaltouchpadmatches} matches of attempting!"
 
 	puts "Total RP Contribution: #{rpcontrib}"
+	puts "--From gears: #{gearrpcontrib}"
 	puts "Total QP Contribution: #{qpcontrib}"
-	puts "Total Playoffs Contribution: #{pcontrib}"
+	puts "--From crossing the baseline: #{baseqpcontrib}"
+	puts "--From gears: #{gearqpcontrib}"
+	puts "--From touchpad: #{touchqpcontrib}"
+	puts "Estimated Playoffs Contribution: #{pcontrib}"
+
+	analyzed['fBaseQPContrib'] = baseqpcontrib
+	analyzed['fBasePContrib'] = basepcontrib
+
+	analyzed['fGearRPContrib'] = gearrpcontrib
+	analyzed['fGearQPContrib'] = gearqpcontrib
+	analyzed['fGearPContrib'] = gearpcontrib
+
+	analyzed['fTouchQPContrib'] = touchqpcontrib
+	analyzed['fTouchPContrib'] = touchpcontrib
 
 	#Assign these at the very end
 	analyzed['fRPContrib'] = rpcontrib / nummatches.to_f
@@ -440,9 +469,14 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	analyzed['fPlayoffContrib'] = pcontrib / nummatches.to_f
 	analyzed['fContribution'] = contribution
 
+	analysisend = Time.now
+	analysistime = analysisstart.to_f - analysisend.to_f
+	puts "Analyze match events completed at #{analysisend} for a total time of #{analysistime} seconds!"
+
 	analyzed
 
 	#games scouted, winrate
+	#change over time
 end
 
 def matchScoreTimeline(sortedevents)
@@ -455,4 +489,11 @@ def matchString(teammatch)
 	output = ""
 
 	output
+end
+
+def nextMatchPredictions()
+	#PRIORITY ORDER
+	#alliance partners: performance, strengths and weaknesses
+	#opponents: performance, strengths and weaknesses
+	#heat maps
 end
