@@ -302,6 +302,7 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	defending = [] if (defending = sortedevents['DEFENDING']).nil?
 	carry_capacity = [] if (carry_capacity = sortedevents['CARRY_CAPACITY']).nil?
 	speed = [] if (speed = sortedevents['SPEED']).nil?
+	mechanical_failure = [] if (mechanical_failure = sortedevents['MECHANICAL_FAILURE']).nil?
 
 	#Inaccurate stuff
 	#highfuel = guessHighFuel(high_start, high_stop, high_miss, scores)
@@ -328,13 +329,16 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 		basematches.each do |key, val| #Add contribution for each match
 			#Standard deviation should be calculated here in the future
 
-			qpcontrib += basematches[key]['qptocontrib']
-			pcontrib += basematches[key]['ptocontrib']
+			baseqpcontrib += basematches[key]['qptocontrib']
+			basepcontrib += basematches[key]['ptocontrib']
 		end
 
+		qpcontrib += baseqpcontrib
+		pcontrib += basepcontrib
 		totalbaselinematches = basematches.length
 	end
 	analyzed['iTotalBaselineMatches'] = totalbaselinematches
+	puts "This team has contributed #{baseqpcontrib} QP worth of baseline crossing points over #{totalbaselinematches} matches of attempting!"
 
 	###GEARS###
 	if gear_load.length > 0
@@ -351,6 +355,9 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	puts "Total gears scored: #{analyzed['iGearsScored']}"
 	puts "Average gears scored per match #{analysis['avgGearsPerMatch']}"
 
+	gearrpcontrib = 0.0
+	gearqpcontrib = 0.0
+	gearpcontrib = 0.0
 	if gear_score.length > 0
 		gearmatches = {} #Key: matchnum, val: {points to contrib}
 		rptocontrib, qptocontrib, ptocontrib = 0.0, 0.0, 0.0
@@ -376,16 +383,23 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 		gearmatches.each do |key, val| #Add contribution for each match
 			#Standard deviation should be calculated here in the future
 
-			rpcontrib += gearmatches[key]['rptocontrib']
-			qpcontrib += gearmatches[key]['qptocontrib']
-			pcontrib += gearmatches[key]['ptocontrib']
+			gearrpcontrib += gearmatches[key]['rptocontrib']
+			gearqpcontrib += gearmatches[key]['qptocontrib']
+			gearpcontrib += gearmatches[key]['ptocontrib']
 		end
 
+		rpcontrib += gearrpcontrib
+		qpcontrib += gearqpcontrib
+		rpcontrib += gearpcontrib
 		totalgearmatches = gearmatches.length
 	end
 	analyzed['iTotalGearMatches'] = totalgearmatches
+	puts "This team has contibuted #{gearrpcontrib} RP worth of gears (#{gearqpcontrib} QP) over #{totalgearmatches} matches of attempting!"
+
 
 	###CLIMB###
+	touchqpcontrib = 0.0
+	touchpcontrib = 0.0
 	if touchpad.length > 0
 		touchmatches = {} #Key: matchnum, val: {points to contrib}
 		qptocontrib, ptocontrib = 0.0, 0.0
@@ -404,13 +418,17 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 		touchmatches.each do |key, val| #Add contribution for each match
 			#Standard deviation should be calculated here in the future
 
-			qpcontrib += touchmatches[key]['qptocontrib']
-			pcontrib += touchmatches[key]['ptocontrib']
+			touchqpcontrib += touchmatches[key]['qptocontrib']
+			touchpcontrib += touchmatches[key]['ptocontrib']
 		end
+
+		qpcontrib += touchqpcontrib
+		pcontrib += touchpcontrib
 
 		totaltouchpadmatches = touchmatches.length
 	end
 	analyzed['iTotalTouchpadMatches'] = totaltouchpadmatches
+	puts "This team has contributed #{touchqpcontrib} QP worth of climb/touchpad points over #{totaltouchpadmatches} matches of attempting!"
 
 	puts "Total RP Contribution: #{rpcontrib}"
 	puts "Total QP Contribution: #{qpcontrib}"
