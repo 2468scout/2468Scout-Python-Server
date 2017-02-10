@@ -176,9 +176,29 @@ get '/getSimpleTeamList' do
   getSimpleTeamList(tempeventcode)
 end
 
-get '/getMatchList' do
+get '/getMatchScores' do #Return a JSON of scores for easy schedule viewing
+  tempeventcode = params['eventCode']
+  output = {"playoffs": [], "qualifiers": []}
+  matchresults = getScores(tempeventcode)
+  matchresults.each do |matchresult|
+  	thismatch = {
+  		"iMatchNumber": matchresult['matchNumber']
+  		"iScoreRed": matchresult['scoreRedFinal']
+  		"iScoreBlue": matchresult['scoreBlueFinal']
+  		"bBlueWin": (matchresult['scoreBlueFinal'].to_i > matchresult['scoreRedFinal'].to_i)
+  		"teams": matchresult['teams']
+  	}
+  	#thismatch = Match.new(matchresult['matchNumber'], matchresult['scoreRedFinal'], matchresult['scoreBlueFinal'], -1, -1, matchresult['tournamentLevel'], tempeventcode, [])
+    if matchresult["tournamentlevel"].eql? "Qualification"
+    	output['playoffs'] << thismatch
+    elsif matchresult["tournamentlevel"].eql? "Playoff"
+    	output['qualifiers'] << thismatch
+    else
+    	puts "Error: I have no idea where to put this #{matchsult['tournamentlevel']}"
+    end
+  end
   content_type :json
-  '{"test":"Success"}'
+  output.to_json
 end
 
 get '/getTeamMatch' do #Return a JSON of match data for a particular team?? (idk.. Ian vult)
@@ -215,7 +235,6 @@ get '/getTeamMatchExistence' do #Check if a teammatch exists in the server's dat
     	status 404 #We do not have the data
     end
 end
-
 
 ### POST REQUESTS
 
@@ -261,13 +280,23 @@ end
 
 post '/postTeamImage' do
   begin
-    teamnum = params['iTeamNumber']
-    eventcode = params['sEventCode']
+    #teamnum = params['iTeamNumber']
+    #eventcode = params['sEventCode']
     # HOW DO I HANDLE IMAGES
     status 200
   rescue
     status 400
   end
+end
+
+post '/updateScores' do #Force update match scores
+	begin
+		eventcode = params['eventCode']
+		updateScores(eventcode)
+		status 200
+	rescue
+		status 400
+	end
 end
 
 post '/updateEventData' do
