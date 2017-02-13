@@ -1,7 +1,8 @@
 #Set constants
 #In the future, if client is willing, we may want to make it so the viewer can request calculation with different constants!
 prepop_gears = 3 #Prepopulated gears, usually constant but "may change"
-total_gears_needed = 16 - prepop_gears #To turn all rotors #1 + 2 + 5 (- 1) + 8 (- 2)
+rotor_gears = [1, 2, 5, 8] #Total 16
+total_gears_needed = rotor_gears.inject(0, &:+) - prepop_gears #To turn all rotors #1 + 2 + 5 (- 1) + 8 (- 2)
 avg_gears_needed = total_gears_needed / 4 #To turn one rotor
 rp_per_autogear, rp_per_telegear = (1.0 / total_gears_needed), (1.0 / total_gears_needed)
 qp_per_autogear = (60.0 / avg_gears_needed)
@@ -137,32 +138,6 @@ def updateRanks(eventcode)
 end
 
 ################################################
-##############BEGIN FUEL GUESSING###############
-################################################
-
-def analyzeScoreScouting()
-	#Prepare scorescouting for guessing fuel
-end
-
-def guessHighFuel(startevents, stopevents, misses, scores)
-	puts "Guess high fuel"
-	result = 0.0
-	deviation = 0.0
-	intervals = [] #[[start, stop],[start, stop]]
-	if (startevents.length - stopevents.length).abs > 1 #Scout client error
-		puts "WARNING: There difference between number of stopevents and startevents is greater than 1"
-	end
-
-	puts "I think that #{result} fuel was scored within a #{deviation} uncertainty."
-	return result
-end
-
-def guessLowFuel(startevents, stopevents, misses, scores)
-	puts "Guess low fuel"
-	return 0
-end
-
-################################################
 #############BEGIN RAWDATA SORTING##############
 ################################################
 
@@ -189,6 +164,46 @@ def sortMatchEvents(matchevents = [])
 	sortedevents
 	
 	#sortedevents['GEAR_SCORE'] => [matchevent1, matchevent2, ...] etc
+end
+
+################################################
+##############BEGIN FUEL GUESSING###############
+################################################
+
+def analyzeScoreScouting(eventcode, matchnumber)
+	#Prepare scorescouting for guessing fuel
+	#Should return {'# milliseconds': score difference}
+	matchevents = [] #We need all the matchevents that happened in the match
+	sortedmatchevents = {}
+	Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_*.json") do |filename|
+		tempjson = retrieveJSON(filename)
+		if tempjson['MatchEvents']
+			tempjson['MatchEvents'].each do |matchevent|
+				matchevents << matchevent
+			end
+		end
+	end
+	sortedmatchevents = sortMatchEvents(matchevents)
+
+
+end
+
+def guessHighFuel(startevents, stopevents, misses, scores)
+	puts "Guess high fuel"
+	result = 0.0
+	deviation = 0.0
+	intervals = [] #[[start, stop],[start, stop]]
+	if (startevents.length - stopevents.length).abs > 1 #Scout client error
+		puts "WARNING: There difference between number of stopevents and startevents is greater than 1"
+	end
+
+	puts "I think that #{result} fuel was scored within a #{deviation} uncertainty."
+	return result
+end
+
+def guessLowFuel(startevents, stopevents, misses, scores)
+	puts "Guess low fuel"
+	return 0
 end
 
 ################################################
