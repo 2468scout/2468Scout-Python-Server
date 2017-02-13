@@ -1,5 +1,21 @@
+#Set constants
+#In the future, if client is willing, we may want to make it so the viewer can request calculation with different constants!
+prepop_gears = 3 #Prepopulated gears, usually constant but "may change"
+total_gears_needed = 16 - prepop_gears #To turn all rotors #1 + 2 + 5 (- 1) + 8 (- 2)
+avg_gears_needed = total_gears_needed / 4 #To turn one rotor
+rp_per_autogear, rp_per_telegear = (1.0 / total_gears_needed), (1.0 / total_gears_needed)
+qp_per_autogear = (60.0 / avg_gears_needed)
+qp_per_telegear = (40.0 / avg_gears_needed )
+p_per_autogear = (100.0 / total_gears_needed) + (60.0 / avg_gears_needed)*4
+p_per_telegear = (100.0 / total_gears_needed) + (40.0 / avg_gears_needed)*4 
+qp_per_touchpad, p_per_touchpad = 50.0, 50.0 #End w/touchpad (requires climb)
+qp_per_baseline, p_per_baseline = 5.0, 5.0 #Autonomous movement
+#Fuel goes here
+#NOTE: A gear in autonomous is worth slightly more than in teleop.
+#This is because completing a rotor gives 60 points in auto, but 40 in tele 
+
 ################################################
-#############BEGIN NUMBER CRUNCHING#############
+##############BEGIN FILE HANDLING###############
 ################################################
 
 #Filename format:
@@ -69,7 +85,7 @@ def getSimpleTeamList(eventcode)
 end
 
 ################################################
-################BEGIN ANALYTICS#################
+##############BEGIN API RETRIEVAL###############
 ################################################
 
 $scoresjson = {} #'CASJ': [{match},{match}]
@@ -120,6 +136,65 @@ def updateRanks(eventcode)
 	ranksjson[eventcode] = JSON.parse(ranks)
 end
 
+################################################
+##############BEGIN FUEL GUESSING###############
+################################################
+
+def analyzeScoreScouting()
+	#Prepare scorescouting for guessing fuel
+end
+
+def guessHighFuel(startevents, stopevents, misses, scores)
+	puts "Guess high fuel"
+	result = 0.0
+	deviation = 0.0
+	intervals = [] #[[start, stop],[start, stop]]
+	if (startevents.length - stopevents.length).abs > 1 #Scout client error
+		puts "WARNING: There difference between number of stopevents and startevents is greater than 1"
+	end
+
+	puts "I think that #{result} fuel was scored within a #{deviation} uncertainty."
+	return result
+end
+
+def guessLowFuel(startevents, stopevents, misses, scores)
+	puts "Guess low fuel"
+	return 0
+end
+
+################################################
+#############BEGIN RAWDATA SORTING##############
+################################################
+
+def sortMatchEvents(matchevents = [])
+	#Receives an array of match events
+	#Returns a hash of arrays of match events
+	#sort using sEventName
+	puts "Sort match events"
+	sortedevents = {}
+	autoevents = []
+	matchevents.each do |matchevent|
+		key = matchevent['sEventName']
+		val = matchevent
+		unless sortedevents[key]
+			sortedevents[key] = [] #Initialize array to hold multiple matchevents
+		end
+		sortedevents[key] << val #Add matchevent to array
+		puts "We now have #{key}: #{sortedevents[key]}"
+		if val['bInAutonomous']
+			autoevents << val
+		end
+	end
+	sortedevents["AUTOSTUFF"] = autoevents if autoevents.length > 0 #Additional separate array to isolate autonomous
+	sortedevents
+	
+	#sortedevents['GEAR_SCORE'] => [matchevent1, matchevent2, ...] etc
+end
+
+################################################
+###############BEGIN BIG ANALYSES###############
+################################################
+
 def analyzeTeamAtEvent(teamnumber, eventcode)
 	#1. Collect all files related to the team and event
 	#2. Update scores and other data from the API
@@ -129,7 +204,8 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	#6. Future predictions / z-score / pick-ban
 	#7. Upcoming matches
 
-	puts "Begin analysis for #{teamnumber} at #{eventcode}"
+	analysisstart = Time.now
+	puts "Analyze #{teamnumber} at event #{eventcode} begun at #{analysisstart}!"
 
 	analysis = {} #The hash to be returned as JSON
 
@@ -207,73 +283,17 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 
 	#Predictions
 
-	#{"filesFound" => filenames}.to_json
-	#{'matchEvents' => matchevents}.to_json
+
+	analysisend = Time.now
+	analysistime = analysisstart.to_f - analysisend.to_f
+	puts "Analyze #{teamnumber} at event #{eventcode} completed at #{analysisend} for a total time of #{analysistime} seconds!"
+
 	analysis.to_json
 end
 
 def analyzeTeamInMatch(teamnum, matchnum, eventname)
 	#specific match-by-match, instead of holistic
 end
-
-def guessHighFuel(startevents, stopevents, misses, scores)
-	puts "Guess high fuel"
-	result = 0.0
-	deviation = 0.0
-	intervals = [] #[[start, stop],[start, stop]]
-	if (startevents.length - stopevents.length).abs > 1 #Scout client error
-		puts "WARNING: There difference between number of stopevents and startevents is greater than 1"
-	end
-
-	puts "I think that #{result} fuel was scored within a #{deviation} uncertainty."
-	return result
-end
-
-def guessLowFuel(startevents, stopevents, misses, scores)
-	puts "Guess low fuel"
-	return 0
-end
-
-def sortMatchEvents(matchevents = [])
-	#Receives an array of match events
-	#Returns a hash of arrays of match events
-	#sort using sEventName
-	puts "Sort match events"
-	sortedevents = {}
-	autoevents = []
-	matchevents.each do |matchevent|
-		key = matchevent['sEventName']
-		val = matchevent
-		unless sortedevents[key]
-			sortedevents[key] = [] #Initialize array to hold multiple matchevents
-		end
-		sortedevents[key] << val #Add matchevent to array
-		puts "We now have #{key}: #{sortedevents[key]}"
-		if val['bInAutonomous']
-			autoevents << val
-		end
-	end
-	sortedevents["AUTOSTUFF"] = autoevents if autoevents.length > 0 #Additional separate array to isolate autonomous
-	sortedevents
-	
-	#sortedevents['GEAR_SCORE'] => [matchevent1, matchevent2, ...] etc
-end
-
-#Set constants
-#In the future, if client is willing, we may want to make it so the viewer can request calculation with different constants!
-prepop_gears = 3 #Prepopulated gears, usually constant but "may change"
-total_gears_needed = 16 - prepop_gears #To turn all rotors #1 + 2 + 5 (- 1) + 8 (- 2)
-avg_gears_needed = total_gears_needed / 4 #To turn one rotor
-rp_per_autogear, rp_per_telegear = (1.0 / total_gears_needed), (1.0 / total_gears_needed)
-qp_per_autogear = (60.0 / avg_gears_needed)
-qp_per_telegear = (40.0 / avg_gears_needed )
-p_per_autogear = (100.0 / total_gears_needed) + (60.0 / avg_gears_needed)*4
-p_per_telegear = (100.0 / total_gears_needed) + (40.0 / avg_gears_needed)*4 
-qp_per_touchpad, p_per_touchpad = 50.0, 50.0 #End w/touchpad (requires climb)
-qp_per_baseline, p_per_baseline = 5.0, 5.0 #Autonomous movement
-#Fuel goes here
-#NOTE: A gear in autonomous is worth slightly more than in teleop.
-#This is because completing a rotor gives 60 points in auto, but 40 in tele 
 
 def analyzeSortedEvents(sortedevents = [], nummatches)
 	#Receives an array of relevant match events
@@ -479,15 +499,25 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	#change over time
 end
 
+################################################
+############BEGIN STRINGIFY METHODS#############
+################################################
+
 def matchScoreTimeline(sortedevents)
 	#test
 end
 
-def matchString(teammatch)
+def matchString(matchme)
 	#Make a table: timestamps, match event type, team, human-readable note
 	#This way we can see a match at a glance
-	output = ""
+	output = [] #[{'time': , 'matcheventcode': , 'team': },{etc}]
+	teammatches = matchme.teamMatchList #apparently 'match' is a keyword
+	teammatches.each do |teammatch|
+		matchevents = teammatch.matchEventList
+		matchevents.each do |matchevent|
 
+		end
+	end
 	output
 end
 
