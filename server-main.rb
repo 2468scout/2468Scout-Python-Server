@@ -271,6 +271,8 @@ end
 post '/postMatchScores' do
 	begin
 		#Real-time scorekeeping
+		saveScoreScoutInfo(request.body)
+		
 		status 200
 	rescue => e
 		puts "Error in postmatchscores #{e.class}, message is #{e.message}"

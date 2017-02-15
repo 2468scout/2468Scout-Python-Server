@@ -76,6 +76,14 @@ def saveTeamPitInfo(jsondata)
 	jsonfile.close
 end
 
+def saveScoreScoutInfo(jsondata)
+	jsondata = JSON.parse(jsondata)
+	eventcode = jsondata['sEventCode']
+	matchnumber = jsondata['iMatchNumber']
+	
+
+end
+
 def getSimpleTeamList(eventcode)
 	output = []
 	tempjson = JSON.parse(reqapi('teams?eventCode=' + eventcode))
@@ -170,13 +178,16 @@ end
 ##############BEGIN FUEL GUESSING###############
 ################################################
 
-def analyzeScoreScouting(eventcode, matchnumber)
+def analyzeScoreScouting(eventcode, matchnumber, matchcolor)
 	#Prepare scorescouting for guessing fuel
 	#Should return {'# milliseconds': score difference}
+	
 	matchevents = [] #We need all the matchevents that happened in the match
 	sortedmatchevents = {}
 	Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_*.json") do |filename|
 		tempjson = retrieveJSON(filename)
+		break unless tempjson['bColor'] == matchcolor #blue is true
+		end
 		if tempjson['MatchEvents']
 			tempjson['MatchEvents'].each do |matchevent|
 				matchevents << matchevent
