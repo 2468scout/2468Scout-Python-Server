@@ -21,7 +21,7 @@ qp_per_baseline, p_per_baseline = 5.0, 5.0 #Autonomous movement
 
 #Filename format:
 #Eventcode_Objecttype_Teamnum.json
-#Objecttype: Pit, TeamMatch, Match
+#Objecttype: Pit, TeamMatch, Match, ScoreScout
 #Teamnum: The word "Team" followed by team number
 
 def retrieveJSON(filename) #return JSON of a file
@@ -80,8 +80,13 @@ def saveScoreScoutInfo(jsondata)
 	jsondata = JSON.parse(jsondata)
 	eventcode = jsondata['sEventCode']
 	matchnumber = jsondata['iMatchNumber']
-	
-
+	side = "Null"
+	side = "Blue" if jsondata['bColor'] == true
+	side = "Red" if jsondata['bColor'] == false
+	filename = "public/Scores/#{eventcode}_Score#{matchnumber}_Side#{side}"
+	jsonfile = File.open(filename,'w')
+	jsonfile << jsondata.to_json
+	jsonfile.close
 end
 
 def getSimpleTeamList(eventcode)
@@ -178,10 +183,12 @@ end
 ##############BEGIN FUEL GUESSING###############
 ################################################
 
-def analyzeScoreScouting(eventcode, matchnumber, matchcolor)
+def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	#Prepare scorescouting for guessing fuel
 	#Should return {'# milliseconds': score difference}
-	
+	#Lots of approximation, since 4 scouts will have different reaction times
+	descrepancies = {}
+
 	matchevents = [] #We need all the matchevents that happened in the match
 	sortedmatchevents = {}
 	Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_*.json") do |filename|
@@ -196,7 +203,21 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor)
 	end
 	sortedmatchevents = sortMatchEvents(matchevents)
 
+	scorescout = '{}'
+	side = "Null"
+	side = "Blue" if matchcolor == true
+	side = "Red" if matchcolor == false
+	filename = "public/Scores/#{eventcode}_Score#{matchnumber}_Side#{side}"
+	scorescout = retrieveJSON(filename)
+	#bColor, increase(1,5,40,50,60)TimeList []
 
+	#Time to calculate the differences.
+	#Idea: do this like a simulation for a game
+	#Each millisecond is a 'turn' and each event is a 'move'
+	scoutedscore = 0
+	matchscore = 0
+	#order by time, add scouted scores, match scores,
+	#difference for .. each second? each millisecond?
 end
 
 def guessHighFuel(startevents, stopevents, misses, scores)

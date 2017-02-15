@@ -31,6 +31,7 @@ Dir.mkdir 'public/Matches' unless File.exists? 'public/Matches'
 Dir.mkdir 'public/Teams' unless File.exists? 'public/Teams'
 Dir.mkdir 'public/TeamMatches' unless File.exists? 'public/TeamMatches'
 Dir.mkdir 'public/Events' unless File.exists? 'public/Events' 
+Dir.mkdir 'public/Scores' unless File.exists? 'public/Scores'
 Dir.mkdir 'apidata' unless File.exists? 'apidata'
 
 $server = 'https://frc-api.firstinspires.org/v2.0/'+Time.now.year.to_s+'/' #Provides matches, events for us.. put -staging after "frc" for practice matches
