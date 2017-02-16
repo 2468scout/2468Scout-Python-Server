@@ -1,8 +1,8 @@
 #Set constants
 #In the future, if client is willing, we may want to make it so the viewer can request calculation with different constants!
-prepop_gears = 3 #Prepopulated gears, usually constant but "may change"
+prepop_gears = [0, 0, 1, 2] #Prepopulated gears, usually constant but "may change"
 rotor_gears = [1, 2, 5, 8] #Total 16
-total_gears_needed = rotor_gears.inject(0, &:+) - prepop_gears #To turn all rotors #1 + 2 + 5 (- 1) + 8 (- 2)
+total_gears_needed = rotor_gears.inject(0, &:+) - prepop_gears.inject(0, &:+) #To turn all rotors #1 + 2 + 5 (- 1) + 8 (- 2)
 avg_gears_needed = total_gears_needed / 4 #To turn one rotor
 rp_per_autogear, rp_per_telegear = (1.0 / total_gears_needed), (1.0 / total_gears_needed)
 qp_per_autogear = (60.0 / avg_gears_needed)
@@ -10,8 +10,11 @@ qp_per_telegear = (40.0 / avg_gears_needed )
 p_per_autogear = (100.0 / total_gears_needed) + (60.0 / avg_gears_needed)*4
 p_per_telegear = (100.0 / total_gears_needed) + (40.0 / avg_gears_needed)*4 
 qp_per_touchpad, p_per_touchpad = 50.0, 50.0 #End w/touchpad (requires climb)
+qp_per_undotouchpad, p_per_undotouchpad = -50.0, -50.0 #Disengage from touchpad prematurely
 qp_per_baseline, p_per_baseline = 5.0, 5.0 #Autonomous movement
 #Fuel goes here
+qp_per_rotor = 40 #only for fuelguessing
+qp_per_allrotors = 100 #also only for fuelguessing
 #NOTE: A gear in autonomous is worth slightly more than in teleop.
 #This is because completing a rotor gives 60 points in auto, but 40 in tele 
 
@@ -183,6 +186,18 @@ end
 ##############BEGIN FUEL GUESSING###############
 ################################################
 
+def addSubscoreScout(data, arrayname, val, scorehash)
+	data[arrayname].each do |ms|
+		scorehash[ms] = 0 unless scorehash[ms]
+		scorehash[ms] += val
+	end
+end
+
+def scoreMatchEvents(sortedevents, scorehash)
+	#iTimeStamp
+	
+end
+
 def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	#Prepare scorescouting for guessing fuel
 	#Should return {'# milliseconds': score difference}
@@ -216,6 +231,20 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	#Each millisecond is a 'turn' and each event is a 'move'
 	scoutedscore = 0
 	matchscore = 0
+	
+	#Testing idea 1
+	#combine them all into one big hash, with the points and timestamp?
+	addscores = {} #points the scorescout says there are
+	addSubscoreScout(scorescout, 'increase1TimeList', 1, addscores)
+	addSubscoreScout(scorescout, 'increase5TimeList', 5, addscores)
+	addSubscoreScout(scorescout, 'increase40TimeList', 40, addscores)
+	addSubscoreScout(scorescout, 'increase50TimeList', 50, addscores)
+	addSubscoreScout(scorescout, 'increase60TimeList', 60, addscores)
+	addSubscoreScout(scorescout, 'decrease50TimeList', -50, addscores)
+
+	nonfuel = {} #points the matchscouts say there are
+	scoreMatchEvents
+
 	#order by time, add scouted scores, match scores,
 	#difference for .. each second? each millisecond?
 end
@@ -379,6 +408,7 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	climb_success = [] if (climb_success = sortedevents['CLIMB_SUCCESS']).nil?
 	climb_fail = [] if (climb_fail = sortedevents['CLIMB_FAIL']).nil?
 	touchpad = [] if (touchpad = sortedevents['TOUCHPAD']).nil?
+	undo_touchpad = [] if (undo_touchpad = sortedevents['UNDO_TOUCHPAD']).nil?
 	baseline = [] if (baseline = sortedevents['BASELINE']).nil?
 	#Qualities about the robot
 	defending = [] if (defending = sortedevents['DEFENDING']).nil?
@@ -574,3 +604,6 @@ def nextMatchPredictions()
 	#opponents: performance, strengths and weaknesses
 	#heat maps
 end
+
+#Also - graph points
+#progression over matches, heat maps, distribution wihin match
