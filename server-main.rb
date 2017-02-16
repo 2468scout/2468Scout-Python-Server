@@ -13,7 +13,7 @@ require 'uri'     #Uniform Resource Identifiers (interact with FRC API and clien
 require 'openssl' #Not sure if we need this but we've been having some SSL awkwardness
 require 'ostruct' #Turn JSON into instant objects! Huzzah!
 require_relative 'server-classes.rb'
-require_relative 'server-analysis.rb'
+#require_relative 'server-analysis.rb'
 #bundle install
 
 ENV['SSL_CERT_FILE'] = 'human/cacert.pem'
@@ -183,10 +183,10 @@ get '/getMatchScores' do #Return a JSON of scores for easy schedule viewing
   matchresults = getScores(tempeventcode)
   matchresults.each do |matchresult|
   	thismatch = {
-  		"iMatchNumber": matchresult['matchNumber']
-  		"iScoreRed": matchresult['scoreRedFinal']
-  		"iScoreBlue": matchresult['scoreBlueFinal']
-  		"bBlueWin": (matchresult['scoreBlueFinal'].to_i > matchresult['scoreRedFinal'].to_i)
+  		"iMatchNumber": matchresult['matchNumber'],
+  		"iScoreRed": matchresult['scoreRedFinal'],
+  		"iScoreBlue": matchresult['scoreBlueFinal'],
+  		"bBlueWin": (matchresult['scoreBlueFinal'].to_i > matchresult['scoreRedFinal'].to_i),
   		"teams": matchresult['teams']
   	}
   	#thismatch = Match.new(matchresult['matchNumber'], matchresult['scoreRedFinal'], matchresult['scoreBlueFinal'], -1, -1, matchresult['tournamentLevel'], tempeventcode, [])
