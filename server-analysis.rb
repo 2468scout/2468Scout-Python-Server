@@ -13,10 +13,13 @@ qp_per_touchpad, p_per_touchpad = 50.0, 50.0 #End w/touchpad (requires climb)
 qp_per_undotouchpad, p_per_undotouchpad = -50.0, -50.0 #Disengage from touchpad prematurely
 qp_per_baseline, p_per_baseline = 5.0, 5.0 #Autonomous movement
 #Fuel goes here
-qp_per_rotor = 40 #only for fuelguessing
-qp_per_allrotors = 100 #also only for fuelguessing
+#Fuel guessing only
+
+
 #NOTE: A gear in autonomous is worth slightly more than in teleop.
 #This is because completing a rotor gives 60 points in auto, but 40 in tele 
+
+
 
 ################################################
 ##############BEGIN FILE HANDLING###############
@@ -194,8 +197,13 @@ def addSubscoreScout(data, arrayname, val, scorehash)
 end
 
 def scoreMatchEvents(sortedevents, scorehash)
-	#iTimeStamp
-	
+	sortedevents.each do |eventarray|
+		eventarray.each do |matchevent|
+			timestamp = matchevent['iTimeStamp']
+			scorehash[timestamp] = [] unless scorehash[timestamp]
+
+		end
+	end
 end
 
 def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
@@ -209,7 +217,7 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_*.json") do |filename|
 		tempjson = retrieveJSON(filename)
 		break unless tempjson['bColor'] == matchcolor #blue is true
-		end
+		
 		if tempjson['MatchEvents']
 			tempjson['MatchEvents'].each do |matchevent|
 				matchevents << matchevent
@@ -243,7 +251,7 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	addSubscoreScout(scorescout, 'decrease50TimeList', -50, addscores)
 
 	nonfuel = {} #points the matchscouts say there are
-	scoreMatchEvents
+	
 
 	#order by time, add scouted scores, match scores,
 	#difference for .. each second? each millisecond?
