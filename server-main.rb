@@ -241,6 +241,15 @@ get '/getTeamMatchExistence' do #Check if a teammatch exists in the server's dat
     end
 end
 
+get '/getFileExistence' do
+	filename = request.env["FILEPATH"]
+	if File.exists?filename
+		status 200
+	else
+		status 404
+	end
+end
+
 ### POST REQUESTS
 
 post '/postPit' do
