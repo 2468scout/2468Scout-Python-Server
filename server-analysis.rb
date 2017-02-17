@@ -357,12 +357,19 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	end #end if filenames.size
 
 	updateScores(eventcode)
+	updateRanks(eventcode)
 
 	#Analyze performance (winrate, rank, etc)
 	analysis['iNumMatches'] = matchnums.length
-
-	#index = 
-	#analysis['iWins'] = $ranksjson["Rankings"][?]
+	teamrank = $ranksjson['Rankings'].find {|i| i['teamNumber'].to_s === teamnumber.to_s}
+	analysis['iRank'] = teamrank['rank']
+	analysis['iWins'] = teamrank['wins']
+	analysis['iLosses'] = teamrank['losses']
+	analysis['iTies'] = teamrank['ties']
+	analysis['fWinRate'] = teamrank['wins'] / teamrank['matchesPlayed']
+	analysis['fQPAverage'] = teamrank['qualAverage'] #Total points scored in quals / number of matches
+	analysis['iTimesDisqualified'] = teamrank['dq']
+	analysis['sWTL'] = "#{teamrank['wins']} / #{teamrank['ties']} / #{teamrank['losses']}" #Wins / Ties / Losses string
 
 	#Add pit info
 	#IANNNNNNNNNNNNNNNNN
@@ -629,7 +636,7 @@ def matchTable(eventcode, matchnumber)
 	happened
 end
 
-def nextMatchPredictions()
+def upcomingMatchSummary()
 	#PRIORITY ORDER
 	#alliance partners: performance, strengths and weaknesses
 	#opponents: performance, strengths and weaknesses
