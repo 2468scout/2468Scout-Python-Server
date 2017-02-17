@@ -78,17 +78,20 @@ def api(path,lastmodified = nil) #Returns the FRC API file for the specified pat
 end
 
 
-def reqapi(path) #Make sure we don't ask for the same thing too often
+def reqapi(path, override = false) #Make sure we don't ask for the same thing too often
   #Returns a string equivalent to the body of the request
   begin
       req = path
-      if $requests[req] && ($requests[req][:time] + 120 > Time.now.to_f) 
+      if $requests[req] && ($requests[req][:time] + 90 > Time.now.to_f) && !override
         #$requests[req][:data] 
         #We requested the same thing within 2 minutes
-      	puts "Old request! Use lastmodified"
+      	puts "Old request (within 90 seconds)! Use lastmodified"
       	myrequest = api(req, $requests[req][:lastmodified])
-      else
-      	puts "New request! Ignore lastmodified"
+      elsif $requests[req] && ($requests[req][:time] + 5 > Time.now.to_f) && override
+      	puts "Overridden request (within 5 seconds)! Use lastmodified"
+      	myrequest = api(req, $request[req][:lastmodified])
+      else	
+      	puts "New or overridden request! Ignore lastmodified"
       	myrequest = api(req)
       end
 
