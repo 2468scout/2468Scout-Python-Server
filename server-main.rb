@@ -163,6 +163,7 @@ saveEventsData($frcEvents)
 ##################################################
 # GET - Client requests data from a specified resource
 # POST - Client submits data to be processed to a specified resource
+#See documentation for details on the requests below
 
 ### GET REQUESTS
 
@@ -194,7 +195,7 @@ get '/getMatchScores' do #Return a JSON of scores for easy schedule viewing
     	output['playoffs'] << thismatch
     elsif matchresult["tournamentlevel"].eql? "Playoff"
     	output['qualifiers'] << thismatch
-    else
+	else    
     	puts "Error: I have no idea where to put this #{matchsult['tournamentlevel']}"
     end
   end
@@ -239,11 +240,17 @@ end
 
 ### POST REQUESTS
 
-post '/postpit' do # Pit scouting (receive team data) #input is an actual string
+post '/postPit' do
   begin
-    # Congration u done it
-    testvar = params['test']
-    puts testvar
+    #Save info
+    saveTeamPitInfo(request.body)
+
+    #Rolling analysis later
+    jsondata = JSON.parse(request.body)
+	eventcode = jsondata['sEventCode']
+	teamnumber = jsondata['iTeamNumber']
+	#analyzeTeamPit(teamnumber, eventcode)
+
     status 200
   rescue => e
     puts e
@@ -251,7 +258,7 @@ post '/postpit' do # Pit scouting (receive team data) #input is an actual string
   end
 end
 
-post '/postTeamMatch' do # eventcode, teamnuber, matchnumber, all matchevents
+post '/postTeamMatch' do
   begin
   	#Save team info
     saveTeamMatchInfo(request.body)
@@ -261,6 +268,9 @@ post '/postTeamMatch' do # eventcode, teamnuber, matchnumber, all matchevents
 	eventcode = jsondata['sEventCode']
 	teamnumber = jsondata['iTeamNumber']
     analyzeTeamAtEvent(teamnumber, eventcode)
+    #URGENT: guessing fuel requires guessing scores
+    #and guessing scores requires all 6 teammatches and the scorescouting
+    #so, need to wait then call analytics for all 6 teams after receiving all necessary data
 
     status 200
   rescue => e

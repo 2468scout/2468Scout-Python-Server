@@ -72,11 +72,13 @@ def saveTeamPitInfo(jsondata)
 	jsondata = JSON.parse(jsondata)
 	eventcode = jsondata['sEventCode']
 	teamnumber = jsondata['iTeamNumber']
-	filename = "public/Teams/"+teamNumber.to_s+"/"+eventcode+"_Pit_Team"+teamnumber.to_s+".json"
+	filename = "public/Teams/#{teamnumber}/#{eventcode}_Pit_Team#{teamnumber}.json"
+	
 	#existingjson = '{}'
 	#if File.exists? filename
 	#	existingjson = retrieveJSON(filename)
 	#end
+	
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata.to_json
 	jsonfile.close
@@ -201,7 +203,9 @@ def scoreMatchEvents(sortedevents, scorehash)
 		eventarray.each do |matchevent|
 			timestamp = matchevent['iTimeStamp']
 			scorehash[timestamp] = [] unless scorehash[timestamp]
-
+			#Option 1: Define a hash at the top with the constants, and key matchevent names to score values
+			#Option 2: Gigantic case switch, like in the main analytics method, in which accurate but longer calculations are made
+			#So... efficiency? Or accuracy?
 		end
 	end
 end
@@ -251,7 +255,7 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	addSubscoreScout(scorescout, 'decrease50TimeList', -50, addscores)
 
 	nonfuel = {} #points the matchscouts say there are
-	
+	#ian stuff
 
 	#order by time, add scouted scores, match scores,
 	#difference for .. each second? each millisecond?
@@ -354,6 +358,9 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 
 	#Analyze performance (winrate, rank, etc)
 	analysis['iNumMatches'] = matchnums.length
+
+	#Add pit info
+	#IANNNNNNNNNNNNNNNNN
 
 	#Analyze match events (accuracy, contribution, etc)
 	sortedevents = sortMatchEvents(matchevents) #Sort by what happens in each event
