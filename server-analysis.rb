@@ -361,6 +361,9 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	#Analyze performance (winrate, rank, etc)
 	analysis['iNumMatches'] = matchnums.length
 
+	#index = 
+	#analysis['iWins'] = $ranksjson["Rankings"][?]
+
 	#Add pit info
 	#IANNNNNNNNNNNNNNNNN
 
@@ -601,18 +604,29 @@ def matchScoreTimeline(sortedevents)
 	#test
 end
 
-def matchString(matchme)
+def matchTable(eventcode, matchnumber)
 	#Make a table: timestamps, match event type, team, human-readable note
 	#This way we can see a match at a glance
-	output = [] #[{'time': , 'matcheventcode': , 'team': },{etc}]
-	teammatches = matchme.teamMatchList #apparently 'match' is a keyword
+	filename = []
+	Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_*.json") do |filename|
+		filenames << filename
+	end
+
+	#Will be an array of arrays, each array contains a row of each table
+	happened = [] #[[time (int), matcheventcode (string), team (int)'],[,,],etc]
+	teammatches = []
+	filenames.each do |filename|
+		filedata = retrieveJSON(filename)
+		teammatches << filedata
+	end
 	teammatches.each do |teammatch|
 		matchevents = teammatch.matchEventList
 		matchevents.each do |matchevent|
-
+			happened[matchevent['iTimeStamp']] = [] unless happened[matchevent['iTimeStamp']]
+			happened[matchevent['iTimeStamp']] << [matchevent['iTimeStamp'],matchevent['sEventName'],teammatch['iTeamNumber']]
 		end
 	end
-	output
+	happened
 end
 
 def nextMatchPredictions()

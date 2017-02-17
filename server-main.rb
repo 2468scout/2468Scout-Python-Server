@@ -250,6 +250,14 @@ get '/getFileExistence' do
 	end
 end
 
+get '/getMatchTable' do
+	eventcode = params['eventCode']
+    matchnumber = params['matchNumber']
+    output = matchTable(eventcode, matchnumber)]
+    content_type :json
+    output
+end
+
 ### POST REQUESTS
 
 post '/postPit' do
