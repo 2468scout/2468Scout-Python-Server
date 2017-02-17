@@ -1,2 +1,7 @@
-public
-apitoken.txt
+log/*log
+tmp/pids/*pid
+public/Events/*
+public/Matches/*
+public/Scores/*
+public/TeamMatches/*
+public/Teams/*
