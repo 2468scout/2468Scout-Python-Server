@@ -1,5 +1,6 @@
 log/*log
 tmp/pids/*pid
+tmp/sockets/*.sock
 public/Events/*
 public/Matches/*
 public/Scores/*
