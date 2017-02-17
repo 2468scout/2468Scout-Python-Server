@@ -120,6 +120,8 @@ def updateEventFromAPI(eventcode)
 	#reqapi for all the latest data
 	#then overwrite all data, in case a correction was made, as it's all the same call anyway
 	#finally, return a success/failure message
+	updateScores(eventcode)
+	updateRanks(eventcode)
 end
 
 def updateScores(eventcode)
@@ -154,8 +156,8 @@ def getScores(eventcode)
 end
 
 def updateRanks(eventcode)
-	ranks = reqapi("rankings/#{eventcode}")
-	ranksjson[eventcode] = JSON.parse(ranks)
+	ranks = reqapi("rankings/#{eventcode}",true)
+	$ranksjson["#{eventcode}"] = JSON.parse(ranks)
 end
 
 ################################################
