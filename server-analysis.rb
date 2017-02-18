@@ -126,7 +126,7 @@ end
 
 def updateScores(eventcode)
 	puts "Begin update scores"
-	matchresults = reqapi("matches/#{eventcode}") #Provides scores, teams
+	matchresults = reqapi("matches/#{eventcode}",true) #Provides scores, teams
 	puts "We got matches look #{matches}"
 	#qualdetails = reqapi("scores/#{eventcode}/qual") 
 	#playoffdetails = reqapi("scores/#{eventcode}/playoff") #Data sweet data! Subject to change.

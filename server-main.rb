@@ -339,6 +339,14 @@ end
 
 post '/updateEventData' do
 	#Include a param to override reqapi and just call api directly
+	begin
+		eventcode = params['eventCode']
+		updateScores(eventcode)
+		updateRanks(eventcode)
+		status 200
+	rescue
+		status 400
+	end
 end
 
 
