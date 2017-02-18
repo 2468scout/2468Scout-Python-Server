@@ -18,7 +18,7 @@ require_relative 'server-analysis.rb'
 
 ENV['SSL_CERT_FILE'] = 'human/cacert.pem'
 
-set :bind, '0.0.0.0' #localhost
+set :bind, 'http://scouting.westaaustin.org/' #localhost
 set :port, 8080   #DO NOT CHANGE without coordination w/client
 enable :lock #One request processed at a time
 

@@ -1,6 +1,6 @@
 require "rubygems"
 
-require File.expand_path '../myapp.rb', __FILE__
+require File.expand_path '../server-main.rb', __FILE__
 
-run MyApp
+run "server-main"
 
