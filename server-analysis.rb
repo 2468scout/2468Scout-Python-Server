@@ -269,8 +269,25 @@ def guessHighFuel(startevents, stopevents, misses, scores)
 	deviation = 0.0
 	intervals = [] #[[start, stop],[start, stop]]
 	if (startevents.length - stopevents.length).abs > 1 #Scout client error
-		puts "WARNING: There difference between number of stopevents and startevents is greater than 1"
+		puts "WARNING: The difference between number of stopevents and startevents is greater than 1. Expect errors!"
 	end
+
+	#Intervals in which the robot was shooting
+	startevents.each do |startevent|
+		intervals << [startevent['iTimeStamp']]
+	end
+	0..stopevents.length do |i| #Pair start times with stop times
+		if intervals[i][0] > stopevents[i]['iTimestamp'] #start time > stop time
+			puts "WARNING: The robot stopped shooting before it started?!"
+		end
+		intervals[i] << stopevents[i]['iTimeStamp']
+	end
+	if intervals[intervals.length - 1].length == 1 #Robot started shooting and never stopped
+		intervals[intervals.length - 1] << 150 * 1000 #Fill in that it stopped at the end of the match
+	end
+	#We're going to need to do this for all 3 robots on the alliance...
+
+	#Match increase1TimeList to shooting times
 
 	puts "I think that #{result} fuel was scored within a #{deviation} uncertainty."
 	return result
