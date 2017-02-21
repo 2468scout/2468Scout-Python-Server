@@ -235,18 +235,18 @@ get '/getTeamMatchExistence' do #Check if a teammatch exists in the server's dat
     matchnumber = params['matchNumber']
     filename = "public/TeamMatches/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
     if File.exists? filename
-    	status 200 #We have the data
+		return 'true' #We have the data
     else
-    	status 404 #We do not have the data
+    	return 'false' #We do not have the data
     end
 end
 
 get '/getFileExistence' do
 	filename = request.env["FILEPATH"]
 	if File.exists?filename
-		status 200
+		return 'true'
 	else
-		status 404
+		return 'false'
 	end
 end
 
