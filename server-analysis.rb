@@ -326,6 +326,18 @@ def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor) #start
 	end
 	#We're going to need to do this for all 3 robots on the alliance...
 
+	#Match interval starts / stops as > and < for score times
+	#Add to special list in which the things that might possibly be scored by which teams
+	#intervals.each
+		#increases.each
+			#if in time frame, add to possibilities
+
+	#Possible scores
+	#possibilities.each
+		#if more than one team
+			#if matchnumber < 20, give average to each team
+			#else weight contributions depending on past averages of each team
+
 	#Match increase1TimeList to shooting times
 
 	puts "I think that #{result} fuel was scored within a #{deviation} uncertainty."
@@ -692,6 +704,12 @@ def upcomingMatchSummary()
 	#alliance partners: performance, strengths and weaknesses
 	#opponents: performance, strengths and weaknesses
 	#heat maps
+
+	#SimpleTeams
+	#heat maps
+	#elo / rankings
+	#predicted roles
+	#has been red carded ?
 end
 
 #Also - graph points
