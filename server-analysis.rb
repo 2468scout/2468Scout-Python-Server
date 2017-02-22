@@ -294,7 +294,7 @@ def addPartialScore(likelyscores, mainteamnumber)
 	return scoretoadd
 end
 
-def guessFuelInMatch(teams, startevents, stopevents, misses, scores, matchcolor, eventcode, matchnumber, mainteamnumber) #startevents = [[team1],[team2],[team3]]
+def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, mainteamnumber) #startevents = [[team1],[team2],[team3]]
 	puts "Guess fuel"
 	hresult = 0.0
 	lresult = 0.0
@@ -305,20 +305,17 @@ def guessFuelInMatch(teams, startevents, stopevents, misses, scores, matchcolor,
 	possiblehscores = {} #likelyhscores with a larger margin of error
 	likelylscores = {} #low gal score
 	possiblelscores = {}
-	if (startevents.length - stopevents.length).abs > 1 #Scout client error
-		puts "WARNING: The difference between number of stopevents and startevents is greater than 1. Expect errors!"
-	end
 
 	#NEEDED: loop through each match played by the main team
 
-	0..(teams.length - 1).each do |j|
-		teamnumber = teams[j]['iTeamNumber']
+	0..(teamnums.length - 1).each do |j|
+		teamnumber = teamnums[j]
 
 		matchevents = [] #We need all the matchevents that happened in the match
 		sortedmatchevents = {}
 		Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_Team#{teamnumber}.json") do |filename|
 			tempjson = retrieveJSON(filename)
-			break unless tempjson['bColor'] == matchcolor #blue is true
+			#break unless tempjson['bColor'] == matchcolor #blue is true
 			if tempjson['MatchEvents']
 				tempjson['MatchEvents'].each do |matchevent|
 					matchevents << matchevent
@@ -341,11 +338,11 @@ def guessFuelInMatch(teams, startevents, stopevents, misses, scores, matchcolor,
 				puts "WARNING: The robot stopped shooting before it started?!"
 			end
 			lintervals[i] << lstopevents[i]['iTimeStamp']
-			lintervals[i] << teams[j]
+			lintervals[i] << teamnums[j]
 		end
 		if lintervals[lintervals.length - 1].length == 1 #Robot started shooting and never stopped
 			lintervals[lintervals.length - 1] << 150 * 1000 #Fill in that it stopped at the end of the match
-			lintervals[lintervals.length - 1] << teams[j]
+			lintervals[lintervals.length - 1] << teamnums[j]
 		end
 
 		hstartevents.each do |startevent|
@@ -356,11 +353,11 @@ def guessFuelInMatch(teams, startevents, stopevents, misses, scores, matchcolor,
 				puts "WARNING: The robot stopped shooting before it started?!"
 			end
 			hintervals[i] << hstopevents[i]['iTimeStamp']
-			hintervals[i] << teams[j]
+			hintervals[i] << teamnums[j]
 		end
 		if hintervals[hintervals.length - 1].length == 1 #Robot started shooting and never stopped
 			hintervals[hintervals.length - 1] << 150 * 1000 #Fill in that it stopped at the end of the match
-			hintervals[hintervals.length - 1] << teams[j]
+			hintervals[hintervals.length - 1] << teamnums[j]
 		end
 	end
 	#We're going to need to do this for all 3 robots on the alliance...
@@ -448,6 +445,8 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	#Main data to handle
 	matchevents = []
 	matchnums = []
+	matchcolors = []
+	matchpartners = {} #matchnum: [team, team, team]
 	scores = []
 
 	#Qualitative / scout opinions
@@ -486,7 +485,7 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 				if tempjson['iMatchNumber'] #If this json has a match number
 					matchnums << tempjson['iMatchNumber'] #Add the matchnumber to an array of team's matchnums
 				end #end if tempjson['iMatchNumber']
-				
+				matchcolors << tempjson['bColor'] #blue is true
 				#Scout opinions - optional parameters
 				speedscores << tempjson['iSpeed'] if tempjson['iSpeed']
 				weightscores << tempjson['iWeight'] if tempjson['iWeight']
@@ -517,8 +516,20 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	#IANNNNNNNNNNNNNNNNN
 
 	#Analyze match events (accuracy, contribution, etc)
+	#Fuel Guessing - NOTE: VERY BUGGY, IF THERE ARE ERRORS DISABLE THIS FIRST
+	fuelguesses = {}
+	matchnums.each_with_index do |matchnum, i|
+		matchcolor = matchcolors[i]
+		matchpartners[matchnum] = []
+		Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnum}_*.json") do |filename|
+			tempjson = retrieveJSON(filename)
+			matchpartners[matchnum] << tempjson['iTeamNumber'] if tempjson['bColor'] == matchcolor #blue is true
+		end
+		fuelguesses[matchnum] = guessFuelInMatch(matchpartners[matchnum], matchcolor, eventcode, matchnum, teamnumber)
+	end
+	#Everything else
 	sortedevents = sortMatchEvents(matchevents) #Sort by what happens in each event
-	analyzedevents = analyzeSortedEvents(sortedevents, matchnums.length) #Send out to analysis method instead of hard coding
+	analyzedevents = analyzeSortedEvents(sortedevents, matchnums.length, fuelguesses) #Send out to analysis method instead of hard coding
 	analyzedevents.each do |key, val|
 		analysis[key] = val
 	end
@@ -540,7 +551,7 @@ def analyzeTeamInMatch(teamnum, matchnum, eventname)
 	#specific match-by-match, instead of holistic
 end
 
-def analyzeSortedEvents(sortedevents = [], nummatches)
+def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 	#Receives an array of relevant match events
 	#Returns a hash of analytics
 	analysisstart = Time.now
@@ -586,8 +597,8 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	mechanical_failure = [] if (mechanical_failure = sortedevents['MECHANICAL_FAILURE']).nil?
 
 	#Inaccurate stuff
-	#highfuel = guessHighFuel(high_start, high_stop, high_miss, scores)
-	#lowfuel = guessLowFuel(low_start, low_stop, low_miss, scores)
+	high_fuel_points = fuelguesses[0] #number of points earned from high fuel
+	low_fuel_points = fuelguesses[1] #number of points earned from low fuel
 
 	#Begin working with numbers
 	###AUTONOMOUS BASELINE###
@@ -620,6 +631,12 @@ def analyzeSortedEvents(sortedevents = [], nummatches)
 	end
 	analyzed['iTotalBaselineMatches'] = totalbaselinematches
 	puts "This team has contributed #{baseqpcontrib} QP worth of baseline crossing points over #{totalbaselinematches} matches of attempting!"
+
+	###FUEL###
+	analyzed['fHighFuelPoints'] = high_fuel_points
+	analyzed['fLowFuelPoints'] = low_fuel_points
+	analyzed['fAvgFuelPoints'] = (high_fuel_points + low_fuel_points) / nummatches.to_f
+	puts "This team has contributed some fuel. Probably #{high_fuel_points} worth of high goals."
 
 	###GEARS###
 	if gear_load.length > 0
