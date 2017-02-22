@@ -263,11 +263,12 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	#difference for .. each second? each millisecond?
 end
 
-def guessHighFuel(teams, startevents, stopevents, misses, scores, matchcolor) #startevents = [[team1],[team2],[team3]]
-	puts "Guess high fuel"
+def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor) #startevents = [[team1],[team2],[team3]]
+	puts "Guess fuel"
 	result = 0.0
 	deviation = 0.0
-	intervals = [] #[[start, stop, teamnum],[start, stop, teamnum]]
+	lintervals = [] #[[start, stop, teamnum],[start, stop, teamnum]]
+	hintervals = []
 	if (startevents.length - stopevents.length).abs > 1 #Scout client error
 		puts "WARNING: The difference between number of stopevents and startevents is greater than 1. Expect errors!"
 	end
@@ -293,18 +294,34 @@ def guessHighFuel(teams, startevents, stopevents, misses, scores, matchcolor) #s
 		hstopevents = sortedmatchevents['HIGH_GOAL_STOP']
 
 		#Intervals in which the robot was shooting
-		startevents.each do |startevent|
-			intervals << [startevent['iTimeStamp']]
+		lstartevents.each do |startevent|
+			lintervals << [startevent['iTimeStamp']]
 		end
-		0..(stopevents.length - 1) do |i| #Pair start times with stop times
-			if intervals[i][0] > stopevents[i]['iTimestamp'] #start time > stop time
+		0..(lstopevents.length - 1) do |i| #Pair start times with stop times
+			if lintervals[i][0] > lstopevents[i]['iTimestamp'] #start time > stop time
 				puts "WARNING: The robot stopped shooting before it started?!"
 			end
-			intervals[i] << stopevents[i]['iTimeStamp']
-			intervals[i] << teams[j]
+			lintervals[i] << lstopevents[i]['iTimeStamp']
+			lintervals[i] << teams[j]
 		end
-		if intervals[intervals.length - 1].length == 1 #Robot started shooting and never stopped
-			intervals[intervals.length - 1] << 150 * 1000 #Fill in that it stopped at the end of the match
+		if lintervals[lintervals.length - 1].length == 1 #Robot started shooting and never stopped
+			lintervals[lintervals.length - 1] << 150 * 1000 #Fill in that it stopped at the end of the match
+			lintervals[lintervals.length - 1] << teams[j]
+		end
+
+		hstartevents.each do |startevent|
+			hintervals << [startevent['iTimeStamp']]
+		end
+		0..(hstopevents.length - 1) do |i| #Pair start times with stop times
+			if hintervals[i][0] > hstopevents[i]['iTimestamp'] #start time > stop time
+				puts "WARNING: The robot stopped shooting before it started?!"
+			end
+			hintervals[i] << hstopevents[i]['iTimeStamp']
+			hintervals[i] << teams[j]
+		end
+		if hintervals[hintervals.length - 1].length == 1 #Robot started shooting and never stopped
+			hintervals[hintervals.length - 1] << 150 * 1000 #Fill in that it stopped at the end of the match
+			hintervals[hintervals.length - 1] << teams[j]
 		end
 	end
 	#We're going to need to do this for all 3 robots on the alliance...
@@ -313,11 +330,6 @@ def guessHighFuel(teams, startevents, stopevents, misses, scores, matchcolor) #s
 
 	puts "I think that #{result} fuel was scored within a #{deviation} uncertainty."
 	return result
-end
-
-def guessLowFuel(startevents, stopevents, misses, scores)
-	puts "Guess low fuel"
-	return 0
 end
 
 ################################################
