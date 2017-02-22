@@ -269,7 +269,32 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	#difference for .. each second? each millisecond?
 end
 
-def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor, eventcode, matchnumber, mainteamnumber) #startevents = [[team1],[team2],[team3]]
+def addPartialScore(likelyscores, mainteamnumber)
+	scoretoadd = 0.0
+	likelyscores.each do |likelyscore|
+		case likelyscore.length
+		when 0 
+			puts "WARNING: For some reason we have a likelyhscore key with no value"
+		when 1
+			if likelyscore.include?(mainteamnumber) #The team scored alone - cool!
+				scoretoadd += 1 #They get credit for scoring 1 point with high fuel
+			end #We don't care to record what the other teams are doing, only the one we're analyzing
+		when 2
+			if likelyscore.include?(mainteamnumber) #The team was one of 2 to be shooting high at this time
+				scoretoadd += 0.5
+			end
+		when 3
+			if likelyscore.include?(mainteamnumber) #One of 3
+				scoretoadd += 1.to_f / 3.to_f
+			end
+		else
+			puts "WARNING: Unknown error in likelyscores.each having to do wth the case switch"
+		end
+	end
+	return scoretoadd
+end
+
+def guessFuelInMatch(teams, startevents, stopevents, misses, scores, matchcolor, eventcode, matchnumber, mainteamnumber) #startevents = [[team1],[team2],[team3]]
 	puts "Guess fuel"
 	hresult = 0.0
 	lresult = 0.0
@@ -372,6 +397,7 @@ def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor, eventc
 			if startsat - 500 < increase < endsat + 2000 #increase happened within shooting time + 2.5 seconds error
 				if likelyhscores[increase] #already exists as possibly being scored by another team
 					puts "WARNING: One robot was shooting high while another was shooting low, estimates for both may be inflated."
+					possiblehscores.delete(increase) #low is more likely than high
 				end
 				likelylscores[increase] = [] unless likelylscores[increase]
 				likelylscores[increase] << teamat #it is possible that corresponding team scored this point
@@ -387,38 +413,14 @@ def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor, eventc
 	end #end lintervals.each
 
 	#Possible scores
-	#possibilities.each
-		#if more than one team
-			#if matchnumber < 20, give average to each team
-			#else weight contributions depending on past averages of each team
-	#likelyhscores
-	#possiblehscores
-	#likelylscores
-	#possiblelscores
-	likelyhscores.each do |likelyscore|
-		case likelyscore.length
-		when 0 
-			puts "WARNING: For some reason we have a likelyhscore key with no value"
-		when 1
-			if likelyscore.include?(mainteamnumber) #The team scored alone - cool!
-				hresult += 1 #They get credit for scoring 1 point with high fuel
-			end #We don't care to record what the other teams are doing, only the one we're analyzing
-		when 2
-			if likelyscore.include?(mainteamnumber) #The team was one of 2 to be shooting high at this time
-				hresult += 0.5
-			end
-		when 3
-			if likelyscore.include?(mainteamnumber) #One of 3
-				hresult += 1.to_f / 3.to_f
-			end
-		else
-			puts "WARNING: Unknown error in likelyhscores.each having to do wth the case switch"
-		end
-	end
+	#See addPartialScore for how this is done
+	hresult += addPartialScore(likelyhscores, mainteamnumber)
+	lresult += addPartialScore(likelylscores, mainteamnumber)
+	hresult += addPartialScore(possiblehscores, mainteamnumber) #kept separate in case we want to weigh differently
+	lresult += addPartialScore(possiblelscores, mainteamnumber)
 
-
-	puts "I think that #{hresult} high fuel was scored within a #{deviation} uncertainty."
-	return result
+	puts "I think that #{hresult} high fuel and #{lresult} low fuel was scored but it could be #{deviation} more or less."
+	return [hresult, lresult]
 end
 
 ################################################
