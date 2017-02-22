@@ -286,7 +286,7 @@ def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor, eventc
 
 	#NEEDED: loop through each match played by the main team
 
-	0..(teams.length - 1) do |j|
+	0..(teams.length - 1).each do |j|
 		teamnumber = teams[j]['iTeamNumber']
 
 		matchevents = [] #We need all the matchevents that happened in the match
@@ -307,10 +307,11 @@ def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor, eventc
 		hstopevents = sortedmatchevents['HIGH_GOAL_STOP']
 
 		#Intervals in which the robot was shooting
+		#fix: each_with_index
 		lstartevents.each do |startevent|
 			lintervals << [startevent['iTimeStamp']]
 		end
-		0..(lstopevents.length - 1) do |i| #Pair start times with stop times
+		0..(lstopevents.length - 1).each do |i| #Pair start times with stop times
 			if lintervals[i][0] > lstopevents[i]['iTimestamp'] #start time > stop time
 				puts "WARNING: The robot stopped shooting before it started?!"
 			end
@@ -325,7 +326,7 @@ def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor, eventc
 		hstartevents.each do |startevent|
 			hintervals << [startevent['iTimeStamp']]
 		end
-		0..(hstopevents.length - 1) do |i| #Pair start times with stop times
+		0..(hstopevents.length - 1).each do |i| #Pair start times with stop times
 			if hintervals[i][0] > hstopevents[i]['iTimestamp'] #start time > stop time
 				puts "WARNING: The robot stopped shooting before it started?!"
 			end
