@@ -212,6 +212,12 @@ def scoreMatchEvents(sortedevents, scorehash)
 	end
 end
 
+def getIncreaseOneTimeList(eventcode, matchnumber, matchcolor = true)
+	filename = "public/Scores/#{eventcode}_Score#{matchnumber}_Side#{matchcolor}.json"
+	scorescout = retrieveJSON(filename)
+	return scorescout['increase1TimeList']
+end
+
 def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	#Prepare scorescouting for guessing fuel
 	#Should return {'# milliseconds': score difference}
@@ -236,7 +242,7 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	side = "Null"
 	side = "Blue" if matchcolor == true
 	side = "Red" if matchcolor == false
-	filename = "public/Scores/#{eventcode}_Score#{matchnumber}_Side#{side}"
+	filename = "public/Scores/#{eventcode}_Score#{matchnumber}_Side#{side}.json"
 	scorescout = retrieveJSON(filename)
 	#bColor, increase(1,5,40,50,60)TimeList []
 
@@ -263,22 +269,29 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	#difference for .. each second? each millisecond?
 end
 
-def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor) #startevents = [[team1],[team2],[team3]]
+def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor, eventcode, matchnumber, mainteamnumber) #startevents = [[team1],[team2],[team3]]
 	puts "Guess fuel"
-	result = 0.0
+	hresult = 0.0
+	lresult = 0.0
 	deviation = 0.0
 	lintervals = [] #[[start, stop, teamnum],[start, stop, teamnum]]
 	hintervals = []
+	likelyhscores = {} #{time: [team team team]} high goal scores
+	possiblehscores = {} #likelyhscores with a larger margin of error
+	likelylscores = {} #low gal score
+	possiblelscores = {}
 	if (startevents.length - stopevents.length).abs > 1 #Scout client error
 		puts "WARNING: The difference between number of stopevents and startevents is greater than 1. Expect errors!"
 	end
+
+	#NEEDED: loop through each match played by the main team
 
 	0..(teams.length - 1) do |j|
 		teamnumber = teams[j]['iTeamNumber']
 
 		matchevents = [] #We need all the matchevents that happened in the match
 		sortedmatchevents = {}
-		Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_#{teamnumber}.json") do |filename|
+		Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_Team#{teamnumber}.json") do |filename|
 			tempjson = retrieveJSON(filename)
 			break unless tempjson['bColor'] == matchcolor #blue is true
 			if tempjson['MatchEvents']
@@ -328,19 +341,82 @@ def guessFuel(teams, startevents, stopevents, misses, scores, matchcolor) #start
 
 	#Match interval starts / stops as > and < for score times
 	#Add to special list in which the things that might possibly be scored by which teams
-	#intervals.each
-		#increases.each
-			#if in time frame, add to possibilities
+	increases = getIncreaseOneTimeList(eventcode, matchnumber, matchcolor)
+
+	hintervals.each do |interval|
+		startsat = interval[0] #start time (ms)
+		endsat = interval[1] #stop time (ms)
+		teamat = interval[2]
+		increases.each do |increase|
+			if startsat - 500 < increase < endsat + 2000 #increase happened within shooting time + 2.5 seconds error
+				likelylscores[increase] = [] unless likelylscores[increase]
+				likelylscores[increase] << teamat #it is possiblle that corresponding team scored this point
+			elsif startsat - 500 < increase < endsat + 10000 #increase happened within shooting time + 10.5 seconds error
+				if likelylscores[increase] #someone else is more likely to have scored it
+					possiblehscores.delete(increase) #delete less likely findings, will return nil if nothing's there anyway
+				else #means the only way for this increase to have happened is for a robot to have shot 10 seconds ago
+					possiblehscores[increase] = [] unless possiblehscores[increase]
+					possiblehscores[increase] << teamat
+				end #end if/else
+			end #end if/elsif/else
+		end #end increases.each
+	end #end hintervals.each
+
+	#Repeat the same thing for low intervals
+	lintervals.each do |interval|
+		startsat = interval[0] #start time (ms)
+		endsat = interval[1] #stop time (ms)
+		teamat = interval[2]
+		increases.each do |increase|
+			if startsat - 500 < increase < endsat + 2000 #increase happened within shooting time + 2.5 seconds error
+				if likelyhscores[increase] #already exists as possibly being scored by another team
+					puts "WARNING: One robot was shooting high while another was shooting low, estimates for both may be inflated."
+				end
+				likelylscores[increase] = [] unless likelylscores[increase]
+				likelylscores[increase] << teamat #it is possible that corresponding team scored this point
+			elsif startsat - 500 < increase < endsat + 10000 #increase happened within shooting time + 10.5 seconds error
+				if likelylscores[increase] || likelyhscores[increase] #someone else is more likely to have scored it
+					possiblelscores.delete(increase) #delete less likely findings, will return nil if nothing's there anyway
+				else #means the only way for this increase to have happened is for a robot to have shot 10 seconds ago
+					possiblelscores[increase] = [] unless possiblelscores[increase]
+					possiblelscores[increase] << teamat
+				end #end if/else
+			end #end if/elsif/else
+		end #end increases.each
+	end #end lintervals.each
 
 	#Possible scores
 	#possibilities.each
 		#if more than one team
 			#if matchnumber < 20, give average to each team
 			#else weight contributions depending on past averages of each team
+	#likelyhscores
+	#possiblehscores
+	#likelylscores
+	#possiblelscores
+	likelyhscores.each do |likelyscore|
+		case likelyscore.length
+		when 0 
+			puts "WARNING: For some reason we have a likelyhscore key with no value"
+		when 1
+			if likelyscore.include?(mainteamnumber) #The team scored alone - cool!
+				hresult += 1 #They get credit for scoring 1 point with high fuel
+			end #We don't care to record what the other teams are doing, only the one we're analyzing
+		when 2
+			if likelyscore.include?(mainteamnumber) #The team was one of 2 to be shooting high at this time
+				hresult += 0.5
+			end
+		when 3
+			if likelyscore.include?(mainteamnumber) #One of 3
+				hresult += 1.to_f / 3.to_f
+			end
+		else
+			puts "WARNING: Unknown error in likelyhscores.each having to do wth the case switch"
+		end
+	end
 
-	#Match increase1TimeList to shooting times
 
-	puts "I think that #{result} fuel was scored within a #{deviation} uncertainty."
+	puts "I think that #{hresult} high fuel was scored within a #{deviation} uncertainty."
 	return result
 end
 
