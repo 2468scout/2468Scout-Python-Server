@@ -263,27 +263,49 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	#difference for .. each second? each millisecond?
 end
 
-def guessHighFuel(startevents, stopevents, misses, scores)
+def guessHighFuel(teams, startevents, stopevents, misses, scores, matchcolor) #startevents = [[team1],[team2],[team3]]
 	puts "Guess high fuel"
 	result = 0.0
 	deviation = 0.0
-	intervals = [] #[[start, stop],[start, stop]]
+	intervals = [] #[[start, stop, teamnum],[start, stop, teamnum]]
 	if (startevents.length - stopevents.length).abs > 1 #Scout client error
 		puts "WARNING: The difference between number of stopevents and startevents is greater than 1. Expect errors!"
 	end
 
-	#Intervals in which the robot was shooting
-	startevents.each do |startevent|
-		intervals << [startevent['iTimeStamp']]
-	end
-	0..stopevents.length do |i| #Pair start times with stop times
-		if intervals[i][0] > stopevents[i]['iTimestamp'] #start time > stop time
-			puts "WARNING: The robot stopped shooting before it started?!"
+	0..(teams.length - 1) do |j|
+		teamnumber = teams[j]['iTeamNumber']
+
+		matchevents = [] #We need all the matchevents that happened in the match
+		sortedmatchevents = {}
+		Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_#{teamnumber}.json") do |filename|
+			tempjson = retrieveJSON(filename)
+			break unless tempjson['bColor'] == matchcolor #blue is true
+			if tempjson['MatchEvents']
+				tempjson['MatchEvents'].each do |matchevent|
+					matchevents << matchevent
+				end
+			end
 		end
-		intervals[i] << stopevents[i]['iTimeStamp']
-	end
-	if intervals[intervals.length - 1].length == 1 #Robot started shooting and never stopped
-		intervals[intervals.length - 1] << 150 * 1000 #Fill in that it stopped at the end of the match
+		sortedmatchevents = sortMatchEvents(matchevents)
+		lstartevents = sortedmatchevents['LOW_GOAL_START']
+		lstopevents = sortedmatchevents['LOW_GOAL_STOP']
+		hstartevents = sortedmatchevents['HIGH_GOAL_START']
+		hstopevents = sortedmatchevents['HIGH_GOAL_STOP']
+
+		#Intervals in which the robot was shooting
+		startevents.each do |startevent|
+			intervals << [startevent['iTimeStamp']]
+		end
+		0..(stopevents.length - 1) do |i| #Pair start times with stop times
+			if intervals[i][0] > stopevents[i]['iTimestamp'] #start time > stop time
+				puts "WARNING: The robot stopped shooting before it started?!"
+			end
+			intervals[i] << stopevents[i]['iTimeStamp']
+			intervals[i] << teams[j]
+		end
+		if intervals[intervals.length - 1].length == 1 #Robot started shooting and never stopped
+			intervals[intervals.length - 1] << 150 * 1000 #Fill in that it stopped at the end of the match
+		end
 	end
 	#We're going to need to do this for all 3 robots on the alliance...
 
