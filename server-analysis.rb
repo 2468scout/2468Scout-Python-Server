@@ -97,6 +97,15 @@ def saveScoreScoutInfo(jsondata)
 	jsonfile.close
 end
 
+def saveHeatMapData(eventcode, teamnumber, sortedMatchEvents)
+	#Sorts through sortedMatchEvents
+	#sortedmatchevents.each do
+	gear_score = [] if (gear_score = sortedevents['GEAR_SCORE']).nil?
+	gear_score.each do |gscore|
+		gscore['iPointValue']
+	end
+end
+
 def getSimpleTeamList(eventcode)
 	output = []
 	tempjson = JSON.parse(reqapi('teams?eventCode=' + eventcode))
@@ -104,6 +113,13 @@ def getSimpleTeamList(eventcode)
 		output << SimpleTeam.new(team['nameShort'].to_s,team['teamNumber'].to_i).to_json
 	end	
 	output.to_json
+end
+
+def getHeatMapPoints(eventcode, teamnumber, sortedMatchEvents)
+	gearMapPointList, lowGoalMapPointList, highGoalMapPointList, climbMapPointList, hopperMapPointList = [], [], [], [], []
+	climbMapBoolList = []
+	lowGoalMapFloatList, highGoalMapFloatList = [], []
+	#
 end
 
 ################################################
@@ -269,41 +285,50 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	#difference for .. each second? each millisecond?
 end
 
-def addPartialScore(likelyscores, mainteamnumber)
+def addPartialScore(likelyscores, mainteamnumber, bHigh) #bHigh: whether or not this is the high goal
 	scoretoadd = 0.0
-	likelyscores.each do |likelyscore|
-		case likelyscore.length
+	fueltoadd = 0.0
+	 #ratio of fuel to score. autonomous: 1/high 3/low, tele: 3/high 9/low
+	likelyscores.each do |time, teamsthatscored|
+		fuelScoreRatio = (bHigh ? 1.0 : 3.0)
+		fuelScoreRatio *= 3.0 if (time < 16000)
+		case teamsthatscored.length
 		when 0 
-			puts "WARNING: For some reason we have a likelyhscore key with no value"
+			puts "WARNING: For some reason we have a teamsthatscored key with no value"
 		when 1
-			if likelyscore.include?(mainteamnumber) #The team scored alone - cool!
+			if teamsthatscored.include?(mainteamnumber) #The team scored alone - cool!
 				scoretoadd += 1 #They get credit for scoring 1 point with high fuel
+				fueltoadd += (1 * fuelScoreRatio)
 			end #We don't care to record what the other teams are doing, only the one we're analyzing
 		when 2
-			if likelyscore.include?(mainteamnumber) #The team was one of 2 to be shooting high at this time
+			if teamsthatscored.include?(mainteamnumber) #The team was one of 2 to be shooting high at this time
 				scoretoadd += 0.5
+				fueltoadd += (0.5 * fuelScoreRatio)
 			end
 		when 3
-			if likelyscore.include?(mainteamnumber) #One of 3
+			if teamsthatscored.include?(mainteamnumber) #One of 3
 				scoretoadd += 1.to_f / 3.to_f
+				fueltoadd += ((1.to_f / 3.to_f) * fuelScoreRatio)
 			end
 		else
 			puts "WARNING: Unknown error in likelyscores.each having to do wth the case switch"
 		end
 	end
-	return scoretoadd
+	return [scoretoadd, fueltoadd]
 end
 
 def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, mainteamnumber) #startevents = [[team1],[team2],[team3]]
 	puts "Guess fuel"
 	hresult = 0.0
 	lresult = 0.0
+	hfuels = 0.0
+	lfuels = 0.0
 	deviation = 0.0
 	lintervals = [] #[[start, stop, teamnum],[start, stop, teamnum]]
 	hintervals = []
 	likelyhscores = {} #{time: [team team team]} high goal scores
 	possiblehscores = {} #likelyhscores with a larger margin of error
-	likelylscores = {} #low gal score
+	likelylscores = {} #low goal score
 	possiblelscores = {}
 
 	#NEEDED: loop through each match played by the main team
@@ -328,10 +353,11 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 		hstartevents = sortedmatchevents['HIGH_GOAL_START']
 		hstopevents = sortedmatchevents['HIGH_GOAL_STOP']
 
+
 		#Intervals in which the robot was shooting
 		#fix: each_with_index
 		lstartevents.each do |startevent|
-			lintervals << [startevent['iTimeStamp']]
+			lintervals << startevent['iTimeStamp']
 		end
 		0..(lstopevents.length - 1).each do |i| #Pair start times with stop times
 			if lintervals[i][0] > lstopevents[i]['iTimestamp'] #start time > stop time
@@ -346,7 +372,7 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 		end
 
 		hstartevents.each do |startevent|
-			hintervals << [startevent['iTimeStamp']]
+			hintervals << startevent['iTimeStamp']
 		end
 		0..(hstopevents.length - 1).each do |i| #Pair start times with stop times
 			if hintervals[i][0] > hstopevents[i]['iTimestamp'] #start time > stop time
@@ -390,7 +416,7 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 		startsat = interval[0] #start time (ms)
 		endsat = interval[1] #stop time (ms)
 		teamat = interval[2]
-		increases.each do |increase|
+		increases.each do |increase| #time of score increase
 			if startsat - 500 < increase < endsat + 2000 #increase happened within shooting time + 2.5 seconds error
 				if likelyhscores[increase] #already exists as possibly being scored by another team
 					puts "WARNING: One robot was shooting high while another was shooting low, estimates for both may be inflated."
@@ -409,15 +435,18 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 		end #end increases.each
 	end #end lintervals.each
 
+	deviation += (possiblehscores.length + possiblelscores.length)
+
 	#Possible scores
 	#See addPartialScore for how this is done
-	hresult += addPartialScore(likelyhscores, mainteamnumber)
-	lresult += addPartialScore(likelylscores, mainteamnumber)
-	hresult += addPartialScore(possiblehscores, mainteamnumber) #kept separate in case we want to weigh differently
-	lresult += addPartialScore(possiblelscores, mainteamnumber)
+	addhr1, addhf1 = addPartialScore(likelyhscores, mainteamnumber, true) #hr1: hresult, hf1: hfuels
+	addl1, addlf1 = addPartialScore(likelylscores, mainteamnumber, false) #1 is likely scores, 2 is probable scores
+	addh2, addhf2 = addPartialScore(possiblehscores, mainteamnumber, true) #kept separate in case we want to weigh differently
+	addl2, addlf2 = addPartialScore(possiblelscores, mainteamnumber, false)
 
-	puts "I think that #{hresult} high fuel and #{lresult} low fuel was scored but it could be #{deviation} more or less."
-	return [hresult, lresult]
+
+	puts "I think that #{hresult} high fuel and #{lresult} low fuel was scored but it could be a max of #{deviation} less."
+	return [hresult, lresult, hfuels, lfuels]
 end
 
 ################################################
@@ -517,7 +546,7 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 
 	#Analyze match events (accuracy, contribution, etc)
 	#Fuel Guessing - NOTE: VERY BUGGY, IF THERE ARE ERRORS DISABLE THIS FIRST
-	fuelguesses = {}
+	fuelguesses = [0.0, 0.0, 0.0, 0.0]
 	matchnums.each_with_index do |matchnum, i|
 		matchcolor = matchcolors[i]
 		matchpartners[matchnum] = []
@@ -525,9 +554,13 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 			tempjson = retrieveJSON(filename)
 			matchpartners[matchnum] << tempjson['iTeamNumber'] if tempjson['bColor'] == matchcolor #blue is true
 		end
-		fuelguesses[matchnum] = guessFuelInMatch(matchpartners[matchnum], matchcolor, eventcode, matchnum, teamnumber)
+		temparray = guessFuelInMatch(matchpartners[matchnum], matchcolor, eventcode, matchnum, teamnumber)
+		fuelguesses[0] += temparray[0]
+		fuelguesses[1] += temparray[1]
+		fuelguesses[2] += temparray[2]
+		fuelguesses[3] += temparray[3]
 	end
-	#Everything else
+	#Everything else in match events
 	sortedevents = sortMatchEvents(matchevents) #Sort by what happens in each event
 	analyzedevents = analyzeSortedEvents(sortedevents, matchnums.length, fuelguesses) #Send out to analysis method instead of hard coding
 	analyzedevents.each do |key, val|
@@ -599,6 +632,8 @@ def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 	#Inaccurate stuff
 	high_fuel_points = fuelguesses[0] #number of points earned from high fuel
 	low_fuel_points = fuelguesses[1] #number of points earned from low fuel
+	high_hit = fuelguesses[2] #number of balls scored in the high goal *we think*
+	low_hit = fuelguesses[3]
 
 	#Begin working with numbers
 	###AUTONOMOUS BASELINE###
@@ -633,10 +668,19 @@ def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 	puts "This team has contributed #{baseqpcontrib} QP worth of baseline crossing points over #{totalbaselinematches} matches of attempting!"
 
 	###FUEL###
-	analyzed['fHighFuelPoints'] = high_fuel_points
+	if high_hit > 0 || high_miss.length > 0
+		analyzed['fHighFuelAccuracy'] = 100 * high_hit.to_f / (high_hit + high_miss.length).to_f #accuracy in high goal
+	else
+		analyzed['fHighFuelAccuracy'] = 0.0
+	end
+	if low_hit > 0 || low_miss.length > 0
+		analyzed['fLowFuelAccuracy'] = 100 * low_hit.to_f / (low_hit + low_miss.length).to_f #accuracy in low goal
+	else
+		analyzed['fLowFuelAccuracy'] = 0.0
+	end
 	analyzed['fLowFuelPoints'] = low_fuel_points
 	analyzed['fAvgFuelPoints'] = (high_fuel_points + low_fuel_points) / nummatches.to_f
-	puts "This team has contributed some fuel. Probably #{high_fuel_points} worth of high goals."
+	puts "This team has contributed probably #{high_fuel_points} worth of high goals with a #{analyzed['fHighFuelAccuracy']} high goal accuracy."
 
 	###GEARS###
 	if gear_load.length > 0
@@ -760,6 +804,10 @@ def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 
 	#games scouted, winrate
 	#change over time
+end
+
+def analyzeSynergies()
+
 end
 
 ################################################
