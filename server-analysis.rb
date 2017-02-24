@@ -97,13 +97,22 @@ def saveScoreScoutInfo(jsondata)
 	jsonfile.close
 end
 
-def saveHeatMapData(eventcode, teamnumber, sortedMatchEvents)
+def saveHeatMapData(eventcode, teamnumber, sortedevents)
 	#Sorts through sortedMatchEvents
 	#sortedmatchevents.each do
-	gear_score = [] if (gear_score = sortedevents['GEAR_SCORE']).nil?
-	gear_score.each do |gscore|
-		gscore['iPointValue']
+	gearMapPointList = makePointList(sortedevents['GEAR_SCORE'])
+	lowGoalMapPointList = makePointList(sortedevents['LOW_GOAL_START'])
+	highGoalMapPointList = makePointList(sortedevents['HIGH_GOAL_START'])
+	climbMapPointList = makePointList(sortedevents['CLIMB_SUCCESS']) + makePointList(sortedevents['CLIMB_FAIL'])
+	hopperMapPointList = makePointList(soredevents['LOAD_HOPPER'])
+	climbMapBoolList = []
+	sortedevents['CLIMB_SUCCESS'].each do |matchevent|
+		climbMapBoolList << true
 	end
+	sortedevents['CLIMB_FAIL'].each do |matchevent|
+		climbMapBoolList << false
+	end
+	lowGoalMapFloatList, highGoalMapFloatList = [], []
 end
 
 def getSimpleTeamList(eventcode)
@@ -115,11 +124,12 @@ def getSimpleTeamList(eventcode)
 	output.to_json
 end
 
-def getHeatMapPoints(eventcode, teamnumber, sortedMatchEvents)
-	gearMapPointList, lowGoalMapPointList, highGoalMapPointList, climbMapPointList, hopperMapPointList = [], [], [], [], []
-	climbMapBoolList = []
-	lowGoalMapFloatList, highGoalMapFloatList = [], []
-	#
+def makePointList(matchevents = [])
+	pointList = []
+	matchevents = [] unless matchevents
+	matchevents.each do |matchevent|
+		pointList << matchevent['loc']
+	end
 end
 
 ################################################
