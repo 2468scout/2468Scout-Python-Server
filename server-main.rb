@@ -170,6 +170,10 @@ saveEventsData($frcEvents)
 
 ### GET REQUESTS
 
+get '/' do
+	return "What are you doing here? This is not a website."
+end
+
 get '/getEvents' do # Return a JSON of the events we got directly from the API, as well as an identifier
   content_type :json
   $events
@@ -344,6 +348,14 @@ post '/updateEventData' do
 		updateScores(eventcode)
 		updateRanks(eventcode)
 		status 200
+	rescue
+		status 400
+	end
+end
+
+post '/setupScoutSchedule' do
+	begin
+		
 	rescue
 		status 400
 	end

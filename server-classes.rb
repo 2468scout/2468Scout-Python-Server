@@ -141,7 +141,6 @@ class MatchEvent #many per TeamMatch
     @sEventName = eventName #what kind of thing happened - LOAD_HOPPER, CLIMB_FAIL, etc
     @loc = location #Point object
   end
-
   def to_json(options)
     # JSON.pretty_generate(self, options)
     {:iTimeStamp => @iTimeStamp, :iPointValue => @iPointValue, :iCount => @iCount, :bInAutonomous => @bInAutonomous, :sEventName => @sEventName, :loc => @loc}.to_json(options)
