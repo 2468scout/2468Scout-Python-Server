@@ -340,6 +340,7 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 	possiblehscores = {} #likelyhscores with a larger margin of error
 	likelylscores = {} #low goal score
 	possiblelscores = {}
+	mainteamintervals = []
 
 	#NEEDED: loop through each match played by the main team
 
@@ -363,6 +364,16 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 		hstartevents = sortedmatchevents['HIGH_GOAL_START']
 		hstopevents = sortedmatchevents['HIGH_GOAL_STOP']
 
+		if (teamnumber == mainteamnumber)
+			hstartevents do |hstart, |
+				mainteamintervals << [hstart]
+			end
+			hstopevents.each_with_index do |hstop, i|
+				mainteamintervals[i] << hstop
+			end
+
+			###MORE
+		end
 
 		#Intervals in which the robot was shooting
 		#fix: each_with_index
@@ -408,10 +419,10 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 		teamat = interval[2]
 		increases.each do |increase|
 			if startsat - 500 < increase < endsat + 2000 #increase happened within shooting time + 2.5 seconds error
-				likelylscores[increase] = [] unless likelylscores[increase]
-				likelylscores[increase] << teamat #it is possiblle that corresponding team scored this point
+				likelyhscores[increase] = [] unless likelyhscores[increase]
+				likelyhscores[increase] << teamat #it is possiblle that corresponding team scored this point
 			elsif startsat - 500 < increase < endsat + 10000 #increase happened within shooting time + 10.5 seconds error
-				if likelylscores[increase] #someone else is more likely to have scored it
+				if likelyhscores[increase] #someone else is more likely to have scored it
 					possiblehscores.delete(increase) #delete less likely findings, will return nil if nothing's there anyway
 				else #means the only way for this increase to have happened is for a robot to have shot 10 seconds ago
 					possiblehscores[increase] = [] unless possiblehscores[increase]
@@ -621,10 +632,10 @@ def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 	load_hopper = [] if (load_hopper = sortedevents['LOAD_HOPPER']).nil?
 	high_start = [] if (high_start = sortedevents['HIGH_GOAL_START']).nil?
 	high_stop = [] if (high_stop = sortedevents['HIGH_GOAL_STOP']).nil?
-	high_miss = [] if (high_miss = sortedevents['HIGH_GOAL_MISS']).nil?
+	#high_miss = [] if (high_miss = sortedevents['HIGH_GOAL_MISS']).nil?
 	low_start = [] if (low_start = sortedevents['LOW_GOAL_START']).nil?
 	low_stop = [] if (low_stop = sortedevents['LOW_GOAL_STOP']).nil?
-	low_miss = [] if (low_miss = sortedevents['LOW_GOAL_MISS']).nil?
+	#low_miss = [] if (low_miss = sortedevents['LOW_GOAL_MISS']).nil?
 	gear_score = [] if (gear_score = sortedevents['GEAR_SCORE']).nil?
 	gear_load = [] if (gear_score = sortedevents['GEAR_LOAD']).nil?
 	gear_drop = [] if (gear_score = sortedevents['GEAR_DROP']).nil?
@@ -679,12 +690,12 @@ def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 
 	###FUEL###
 	if high_hit > 0 || high_miss.length > 0
-		analyzed['fHighFuelAccuracy'] = 100 * high_hit.to_f / (high_hit + high_miss.length).to_f #accuracy in high goal
+		analyzed['fHighFuelAccuracy'] = 100 * high_hit.to_f / (high_hit + high_stop['iCount']).to_f #accuracy in high goal, iCount is number missed
 	else
 		analyzed['fHighFuelAccuracy'] = 0.0
 	end
 	if low_hit > 0 || low_miss.length > 0
-		analyzed['fLowFuelAccuracy'] = 100 * low_hit.to_f / (low_hit + low_miss.length).to_f #accuracy in low goal
+		analyzed['fLowFuelAccuracy'] = 100 * low_hit.to_f / (low_hit + low_stop['iCount']).to_f #accuracy in low goal
 	else
 		analyzed['fLowFuelAccuracy'] = 0.0
 	end
