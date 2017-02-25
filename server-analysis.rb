@@ -1,3 +1,5 @@
+require 'set'
+
 #Set constants
 #In the future, if client is willing, we may want to make it so the viewer can request calculation with different constants!
 prepop_gears = [0, 0, 1, 2] #Prepopulated gears, usually constant but "may change"
@@ -130,6 +132,60 @@ def saveCalculateHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist,
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata
 	jsonfile.close
+end
+
+def pickEightRandomScouts(eventcode, peopleresponsible)
+	#eventcode is used as a seed for the pseudorandom number gen
+	result = [] #eight unique scouts
+	numbers = Set.new #eight unique index
+	return -1 if peopleresponsible.length < 8
+
+	#Setup PRNG
+	min = 0
+	max = peopleresponsible.length - 1
+	seed = 1
+	eventcode.each_byte do |c|
+		seed += c
+	end
+	prng = Random.new(seed)
+
+	#Generate numbers
+	while numbers.length < 8 do
+		numbers.add(prng.rand(min..max))
+	end
+	numbers.each do |numbr|
+		result << peopleresponsible[numbr]
+	end
+
+	return result
+end
+
+def saveCalculateScoutSchedule(jsondata, eventcode)
+	#create a scout schedule, then save it
+	qualscoutschedule = []
+	playoffscoutschedule = []
+	scoutschedule = [] #ScheduleItems
+	#sPersonResponsible, sItemType, sEventCod, iMatchNumber, iTeamNumber, iStationNumber, bColor
+
+	#Data from post request
+	jsondata = JSON.parse(jsondata)
+	peopleresponsible = jsondata
+
+	#Data from API
+	qualdata = JSON.parse(reqapi("schedule/#{eventcode}?tournamentLevel=qual"))
+	qualschedule = qualdata['Schedule']
+	playoffdata = JSON.parse(reqapi("schedule/#{eventcode}?tournamentLevel=playoff"))
+	playoffschedule = playoffdata['Schedule']
+
+	numquals = qualschedule.length
+	numplayoffs = playoffschedule.length
+
+	#method to randomly choose 8 people
+	#match.each do
+	#INCOMPLETE
+	scouts = pickEightRandomScouts(eventcode, peopleresponsible)
+
+	filename = "public/Events/#{eventcode}_Schedule.json"
 end
 
 def getSimpleTeamList(eventcode)
