@@ -97,12 +97,12 @@ def saveScoreScoutInfo(jsondata)
 	jsonfile.close
 end
 
-def saveHeatMapData(eventcode, teamnumber, sortedevents)
+def saveHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist, laccuracylist, hloclist, lloclist)
 	#Sorts through sortedMatchEvents
 	#sortedmatchevents.each do
 	gearMapPointList = makePointList(sortedevents['GEAR_SCORE'])
-	lowGoalMapPointList = makePointList(sortedevents['LOW_GOAL_START'])
-	highGoalMapPointList = makePointList(sortedevents['HIGH_GOAL_START'])
+	lowGoalMapPointList = lloclist #instead of making a point list, we have to use a specific order to match float lists
+	highGoalMapPointList = hloclist
 	climbMapPointList = makePointList(sortedevents['CLIMB_SUCCESS']) + makePointList(sortedevents['CLIMB_FAIL'])
 	hopperMapPointList = makePointList(soredevents['LOAD_HOPPER'])
 	climbMapBoolList = []
@@ -112,7 +112,7 @@ def saveHeatMapData(eventcode, teamnumber, sortedevents)
 	sortedevents['CLIMB_FAIL'].each do |matchevent|
 		climbMapBoolList << false
 	end
-	lowGoalMapFloatList, highGoalMapFloatList = [], []
+	lowGoalMapFloatList, highGoalMapFloatList = laccuracylist, haccuracylist
 end
 
 def getSimpleTeamList(eventcode)
@@ -296,35 +296,39 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 end
 
 def addPartialScore(likelyscores, mainteamnumber, bHigh) #bHigh: whether or not this is the high goal
-	scoretoadd = 0.0
-	fueltoadd = 0.0
-	 #ratio of fuel to score. autonomous: 1/high 3/low, tele: 3/high 9/low
-	likelyscores.each do |time, teamsthatscored|
-		fuelScoreRatio = (bHigh ? 1.0 : 3.0)
+	scorethismatch = 0.0
+	fuelthismatch = 0.0
+	heatMapHits = {} #heatMapHits: {endtime: fuel} .. to be used in calculating accuracy
+	likelyscores.each do |time, teamshash|
+		endtime = teamshash[mainteamnumber] #for heat map
+		fuelScoreRatio = (bHigh ? 1.0 : 3.0) #ratio of fuel to score. autonomous: 1/high 3/low, tele: 3/high 9/low
 		fuelScoreRatio *= 3.0 if (time < 16000)
-		case teamsthatscored.length
+		case teamshash.length
 		when 0 
 			puts "WARNING: For some reason we have a teamsthatscored key with no value"
 		when 1
-			if teamsthatscored.include?(mainteamnumber) #The team scored alone - cool!
-				scoretoadd += 1 #They get credit for scoring 1 point with high fuel
-				fueltoadd += (1 * fuelScoreRatio)
+			if teamshash.has_key?(mainteamnumber) #The team scored alone - cool!
+				scoretoadd = 1 #They get credit for scoring 1 point with high fuel
+				fueltoadd = (1 * fuelScoreRatio)
 			end #We don't care to record what the other teams are doing, only the one we're analyzing
 		when 2
-			if teamsthatscored.include?(mainteamnumber) #The team was one of 2 to be shooting high at this time
-				scoretoadd += 0.5
-				fueltoadd += (0.5 * fuelScoreRatio)
+			if teamshash.has_key?(mainteamnumber) #The team was one of 2 to be shooting high at this time
+				scoretoadd = 0.5
+				fueltoadd = (0.5 * fuelScoreRatio)
 			end
 		when 3
-			if teamsthatscored.include?(mainteamnumber) #One of 3
-				scoretoadd += 1.to_f / 3.to_f
-				fueltoadd += ((1.to_f / 3.to_f) * fuelScoreRatio)
+			if teamshash.has_key?(mainteamnumber) #One of 3
+				scoretoadd = 1.to_f / 3.to_f
+				fueltoadd = ((1.to_f / 3.to_f) * fuelScoreRatio)
 			end
 		else
 			puts "WARNING: Unknown error in likelyscores.each having to do wth the case switch"
 		end
+		heatMapHits[endtime] = fueltoadd 
+		scorethismatch += scoretoadd
+		fuelthismatch += fueltoadd
 	end
-	return [scoretoadd, fueltoadd]
+	return [scorethismatch, fuelthismatch, heatMapHits]
 end
 
 def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, mainteamnumber) #startevents = [[team1],[team2],[team3]]
@@ -336,7 +340,7 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 	deviation = 0.0
 	lintervals = [] #[[start, stop, teamnum],[start, stop, teamnum]]
 	hintervals = []
-	likelyhscores = {} #{time: [team team team]} high goal scores
+	likelyhscores = {} #{time: [team team team]} high goal scores ##Remodel to: {time: {team: stoptime, team: stoptime, team: stoptime}}
 	possiblehscores = {} #likelyhscores with a larger margin of error
 	likelylscores = {} #low goal score
 	possiblelscores = {}
@@ -363,17 +367,6 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 		lstopevents = sortedmatchevents['LOW_GOAL_STOP']
 		hstartevents = sortedmatchevents['HIGH_GOAL_START']
 		hstopevents = sortedmatchevents['HIGH_GOAL_STOP']
-
-		if (teamnumber == mainteamnumber)
-			hstartevents do |hstart, |
-				mainteamintervals << [hstart]
-			end
-			hstopevents.each_with_index do |hstop, i|
-				mainteamintervals[i] << hstop
-			end
-
-			###MORE
-		end
 
 		#Intervals in which the robot was shooting
 		#fix: each_with_index
@@ -419,14 +412,14 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 		teamat = interval[2]
 		increases.each do |increase|
 			if startsat - 500 < increase < endsat + 2000 #increase happened within shooting time + 2.5 seconds error
-				likelyhscores[increase] = [] unless likelyhscores[increase]
-				likelyhscores[increase] << teamat #it is possiblle that corresponding team scored this point
+				likelyhscores[increase] = {} unless likelyhscores[increase]
+				likelyhscores[increase][teamat] = endsat #it is possible that corresponding team scored this point
 			elsif startsat - 500 < increase < endsat + 10000 #increase happened within shooting time + 10.5 seconds error
 				if likelyhscores[increase] #someone else is more likely to have scored it
 					possiblehscores.delete(increase) #delete less likely findings, will return nil if nothing's there anyway
 				else #means the only way for this increase to have happened is for a robot to have shot 10 seconds ago
-					possiblehscores[increase] = [] unless possiblehscores[increase]
-					possiblehscores[increase] << teamat
+					possiblehscores[increase] = {} unless possiblehscores[increase]
+					possiblehscores[increase][teamat] = endsat
 				end #end if/else
 			end #end if/elsif/else
 		end #end increases.each
@@ -439,18 +432,18 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 		teamat = interval[2]
 		increases.each do |increase| #time of score increase
 			if startsat - 500 < increase < endsat + 2000 #increase happened within shooting time + 2.5 seconds error
-				if likelyhscores[increase] #already exists as possibly being scored by another team
+				if likelylscores[increase] #already exists as possibly being scored by another team
 					puts "WARNING: One robot was shooting high while another was shooting low, estimates for both may be inflated."
 					possiblehscores.delete(increase) #low is more likely than high
 				end
-				likelylscores[increase] = [] unless likelylscores[increase]
-				likelylscores[increase] << teamat #it is possible that corresponding team scored this point
+				likelylscores[increase] = {} unless likelylscores[increase]
+				likelylscores[increase][teamat] = endsat #it is possible that corresponding team scored this point
 			elsif startsat - 500 < increase < endsat + 10000 #increase happened within shooting time + 10.5 seconds error
 				if likelylscores[increase] || likelyhscores[increase] #someone else is more likely to have scored it
 					possiblelscores.delete(increase) #delete less likely findings, will return nil if nothing's there anyway
 				else #means the only way for this increase to have happened is for a robot to have shot 10 seconds ago
-					possiblelscores[increase] = [] unless possiblelscores[increase]
-					possiblelscores[increase] << teamat
+					possiblelscores[increase] = {} unless possiblelscores[increase]
+					possiblelscores[increase][teamat] = endsat
 				end #end if/else
 			end #end if/elsif/else
 		end #end increases.each
@@ -460,14 +453,64 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 
 	#Possible scores
 	#See addPartialScore for how this is done
-	addhr1, addhf1 = addPartialScore(likelyhscores, mainteamnumber, true) #hr1: hresult, hf1: hfuels
-	addl1, addlf1 = addPartialScore(likelylscores, mainteamnumber, false) #1 is likely scores, 2 is probable scores
-	addh2, addhf2 = addPartialScore(possiblehscores, mainteamnumber, true) #kept separate in case we want to weigh differently
-	addl2, addlf2 = addPartialScore(possiblelscores, mainteamnumber, false)
+	addhr1, addhf1, hh1 = addPartialScore(likelyhscores, mainteamnumber, true) #hr1: hresult, hf1: hfuels, hh: high (goal) hits ((heat map data))
+	addlr1, addlf1, lh1 = addPartialScore(likelylscores, mainteamnumber, false) #1 is likely scores, 2 is probable scores
+	addhr2, addhf2, hh2 = addPartialScore(possiblehscores, mainteamnumber, true) #kept separate in case we want to weigh differently
+	addlr2, addlf2, lh2 = addPartialScore(possiblelscores, mainteamnumber, false)
 
+	hresult += addhr1
+	hresult += addhr2
+	lresult += addlr1
+	lresult += addlr2
+
+	#Heat map accuracy processing
+	hheatmaphits = hh2.merge(hh1) #remember {endtime: fuel}
+	lheatmaphits = lh1.merge(lh2)
+	hheatmapmisses = {}
+	lheatmapmisses = {}
+	hstopevents.each do |stopevent|
+		hheatmapmisses[stopevent['iTimeStamp']] = stopevent['iCount'] #{endtime: misses}
+	end
+	lstopevents.each do |stopevent|
+		lheatmapmisses[stopevent['iTimeStamp']] = stopevent['iCount'] 
+	end
+
+	haccuracymap = hheatmaphits.merge(hheatmapmisses){|key, hitval, missval| #calculate hits vs misses at matching times
+		100 * hitval.to_f / (hitval + missval).to_f #percent accuracy
+	}
+	laccuracymap = hheatmaphits.merge(hheatmapmisses){|key, hitval, missval| #calculate hits vs misses at matching times
+		100 * hitval.to_f / (hitval + missval).to_f #percent accuracy
+	}
+
+	#convert accuracy maps into lists here
+	#after matching times / locations
+	hlocmap = {}
+	llocmap = {}
+	hstopevents.each do |stopevent|
+		hlocmap[stopevent['iTimeStamp']] = stopevent['loc'] #{endtime: location}
+	end
+	lstopevents.each do |stopevent|
+		llocmap[stopevent['iTimeStamp']] = stopevent['loc']
+	end
+
+	haccuracylist = []
+	laccuracylist = []
+	hloclist = []
+	lloclist = []
+
+	#turn all the hashes into lists! looping through them to keep from repeating code
+	mapstomerge = [haccuracymap, laccuracymap, hlocmap, llocmap]
+	liststomerge = [haccuracylist, laccuracylist, hloclist, lloclist]
+	mapstomerge.each_with_index do |map, i|
+		list = liststomerge[i]
+		map.each do |key, val|
+			list << val
+		end
+	end
+	
 
 	puts "I think that #{hresult} high fuel and #{lresult} low fuel was scored but it could be a max of #{deviation} less."
-	return [hresult, lresult, hfuels, lfuels]
+	return [hresult, lresult, hfuels, lfuels, haccuracylist, laccuracylist, hloclist, lloclist] #result is score; fuel is balls; lists are heat map data
 end
 
 ################################################
@@ -566,6 +609,11 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	#IANNNNNNNNNNNNNNNNN
 
 	#Analyze match events (accuracy, contribution, etc)
+	#Heat map data for fuel, necessary to define here because it is calculated alongside other fuel data
+	haccuracylist = []
+	laccuracylist = []
+	hloclist = []
+	lloclist = []
 	#Fuel Guessing - NOTE: VERY BUGGY, IF THERE ARE ERRORS DISABLE THIS FIRST
 	fuelguesses = [0.0, 0.0, 0.0, 0.0]
 	matchnums.each_with_index do |matchnum, i|
@@ -575,11 +623,15 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 			tempjson = retrieveJSON(filename)
 			matchpartners[matchnum] << tempjson['iTeamNumber'] if tempjson['bColor'] == matchcolor #blue is true
 		end
-		temparray = guessFuelInMatch(matchpartners[matchnum], matchcolor, eventcode, matchnum, teamnumber)
+		temparray = guessFuelInMatch(matchpartners[matchnum], matchcolor, eventcode, matchnum, teamnumber) #[hresult, lresult, hfuels, lfuels, haccuracylist, laccuracylist, hloclist, lloclist]
 		fuelguesses[0] += temparray[0]
 		fuelguesses[1] += temparray[1]
 		fuelguesses[2] += temparray[2]
 		fuelguesses[3] += temparray[3]
+		haccuracylist << temparray[4] 
+		laccuracylist << temparray[5] 
+		hloclist << temparray[6] 
+		lloclist << temparray[7] 
 	end
 	#Everything else in match events
 	sortedevents = sortMatchEvents(matchevents) #Sort by what happens in each event
