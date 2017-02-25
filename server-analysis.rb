@@ -115,13 +115,13 @@ def saveCalculateHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist,
 
 	#Prepping data
 	jsondata = {
-		gearMapPointList: gearMapPointList
-		lowGoalMapFloatList: lowGoalMapFloatList
-		lowGoalMapPointList: lowGoalMapPointList
-		highGoalMapFloatList: highGoalMapFloatList
-		highGoalMapPointList: highGoalMapPointList
-		climbMapBoolList: climbMapBoolList
-		climbMapPointList: climbMapPointList
+		gearMapPointList: gearMapPointList,
+		lowGoalMapFloatList: lowGoalMapFloatList,
+		lowGoalMapPointList: lowGoalMapPointList,
+		highGoalMapFloatList: highGoalMapFloatList,
+		highGoalMapPointList: highGoalMapPointList,
+		climbMapBoolList: climbMapBoolList,
+		climbMapPointList: climbMapPointList,
 		hopperMapPointList: hopperMapPointList
 	}
 
