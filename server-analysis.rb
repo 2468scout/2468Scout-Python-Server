@@ -97,9 +97,8 @@ def saveScoreScoutInfo(jsondata)
 	jsonfile.close
 end
 
-def saveHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist, laccuracylist, hloclist, lloclist)
-	#Sorts through sortedMatchEvents
-	#sortedmatchevents.each do
+def saveCalculateHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist, laccuracylist, hloclist, lloclist)
+	#Processing data
 	gearMapPointList = makePointList(sortedevents['GEAR_SCORE'])
 	lowGoalMapPointList = lloclist #instead of making a point list, we have to use a specific order to match float lists
 	highGoalMapPointList = hloclist
@@ -113,6 +112,24 @@ def saveHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist, laccurac
 		climbMapBoolList << false
 	end
 	lowGoalMapFloatList, highGoalMapFloatList = laccuracylist, haccuracylist
+
+	#Prepping data
+	jsondata = {
+		gearMapPointList: gearMapPointList
+		lowGoalMapFloatList: lowGoalMapFloatList
+		lowGoalMapPointList: lowGoalMapPointList
+		highGoalMapFloatList: highGoalMapFloatList
+		highGoalMapPointList: highGoalMapPointList
+		climbMapBoolList: climbMapBoolList
+		climbMapPointList: climbMapPointList
+		hopperMapPointList: hopperMapPointList
+	}
+
+	#Saving data
+	filename = "public/Teams/#{teamnumber}/#{eventcode}_HeatMaps.json"
+	jsonfile = File.open(filename,'w')
+	jsonfile << jsondata
+	jsonfile.close
 end
 
 def getSimpleTeamList(eventcode)
@@ -639,6 +656,9 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 	analyzedevents.each do |key, val|
 		analysis[key] = val
 	end
+
+	#Heat maps - this is not includedin th analysis object as it is already saved immediately after calculation
+	saveCalculateHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist, laccuracylist, hloclist, lloclist)
 
 	#Analyze performance with and against other teams at event
 
