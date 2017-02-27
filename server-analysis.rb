@@ -839,6 +839,7 @@ def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 		carry_capacity = [] if (carry_capacity = sortedevents['CARRY_CAPACITY']).nil?
 		speed = [] if (speed = sortedevents['SPEED']).nil?
 		mechanical_failure = [] if (mechanical_failure = sortedevents['MECHANICAL_FAILURE']).nil?
+		penalty = [] if (penalty = sortedevents['PENALTY']).nil?
 
 		#Inaccurate stuff
 		high_fuel_points = fuelguesses[0] #number of points earned from high fuel
@@ -982,6 +983,12 @@ def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 		end
 		analyzed['iTotalTouchpadMatches'] = totaltouchpadmatches
 		puts "This team has contributed #{touchqpcontrib} QP worth of climb/touchpad points over #{totaltouchpadmatches} matches of attempting!"
+
+		#analyzed['fStuckLikelihood'] = #The client receives this but doesn't give any 'stuck' events...
+		analyzed['fDefendPercent'] = 100 * defending.length / nummatches
+		analyzed['fPenaltyLikelihood'] = 100 * penalty.length / nummatches
+		analyzed['fBreakdownLikelihood'] = 100 * mechanical_failure.length / nummatches
+
 
 		puts "Total RP Contribution: #{rpcontrib}"
 		puts "--From gears: #{gearrpcontrib}"
