@@ -136,7 +136,7 @@ end
 
 def pickEightRandomScouts(eventcode, peopleresponsible)
 	#eventcode is used as a seed for the pseudorandom number gen
-	result = [] #eight unique scouts
+	result = [] #eight unique scouts (peopleresponsible)
 	numbers = Set.new #eight unique index
 	return -1 if peopleresponsible.length < 8
 
@@ -180,12 +180,64 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 	numquals = qualschedule.length
 	numplayoffs = playoffschedule.length
 
-	#method to randomly choose 8 people
-	#match.each do
-	#INCOMPLETE
-	scouts = pickEightRandomScouts(eventcode, peopleresponsible)
+	numquals.times do |matchnum|
+		currentmatch = qualschedule[matchnum]
+		scouts = pickEightRandomScouts(eventcode, peopleresponsible)
+		tempcounter = 0 #0 through 7 of scout
+		scouts.each do |scout|
+			scheduleitem = {
+				sPersonResponsible: scout,
+				sEventCode: eventcode,
+				iMatchNumber: matchnum,
+			}
+			if tempcounter < 5
+				currentteam = currentmatch['Teams'][tempcounter]
+				scheduleitem['iTeamNumber'] = currentteam['number']
+				station = currentteam['station']
+				currentcolor, stationnumber = station[0, station.length-1], station[station.length-1, station.length]
+				scheduleitem['iStationNumber'] = stationnumber.to_i
+				scheduleitem['bColor'] = (currentcolor === "Blue" ? true : false) #blue is true
+				scheduleitem['sItemType'] = 'matchscout'
+			else
+				scheduleitem['sItemType'] = 'scorescout'
+				bColor = (tempcounter == 6 ? true : false)
+			end
+			tempcounter++
+			scoutschedule << scheduleitem
+		end
+	end
+	#Same exact thing but for playoffs
+	numplayoffs.times do |matchnum|
+		currentmatch = playoffschedule[matchnum]
+		scouts = pickEightRandomScouts(eventcode, peopleresponsible)
+		tempcounter = 0 #0 through 7 of scout
+		scouts.each do |scout|
+			scheduleitem = {
+				sPersonResponsible: scout,
+				sEventCode: eventcode,
+				iMatchNumber: matchnum,
+			}
+			if tempcounter < 5
+				currentteam = currentmatch['Teams'][tempcounter]
+				scheduleitem['iTeamNumber'] = currentteam['number']
+				station = currentteam['station']
+				currentcolor, stationnumber = station[0, station.length-1], station[station.length-1, station.length]
+				scheduleitem['iStationNumber'] = stationnumber.to_i
+				scheduleitem['bColor'] = (currentcolor === "Blue" ? true : false) #blue is true
+				scheduleitem['sItemType'] = 'matchscout'
+			else
+				scheduleitem['sItemType'] = 'scorescout'
+				bColor = (tempcounter == 6 ? true : false)
+			end
+			tempcounter++
+			scoutschedule << scheduleitem
+		end
+	end
 
 	filename = "public/Events/#{eventcode}_Schedule.json"
+	jsonfile = File.open(filename, 'w')
+	jsonfile << scoutschedule.to_json
+	jsonfile.close
 end
 
 def getSimpleTeamList(eventcode)
