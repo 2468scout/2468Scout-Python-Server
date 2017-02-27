@@ -163,7 +163,6 @@ end
 def saveCalculateScoutSchedule(jsondata, eventcode)
 	#create a scout schedule, then save it
 	qualscoutschedule = []
-	playoffscoutschedule = []
 	scoutschedule = [] #ScheduleItems
 	#sPersonResponsible, sItemType, sEventCod, iMatchNumber, iTeamNumber, iStationNumber, bColor
 
@@ -174,41 +173,9 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 	#Data from API
 	qualdata = JSON.parse(reqapi("schedule/#{eventcode}?tournamentLevel=qual"))
 	qualschedule = qualdata['Schedule']
-	playoffdata = JSON.parse(reqapi("schedule/#{eventcode}?tournamentLevel=playoff"))
-	playoffschedule = playoffdata['Schedule']
-
 	numquals = qualschedule.length
-	numplayoffs = playoffschedule.length
-
 	numquals.times do |matchnum|
 		currentmatch = qualschedule[matchnum]
-		scouts = pickEightRandomScouts(eventcode, peopleresponsible)
-		tempcounter = 0 #0 through 7 of scout
-		scouts.each do |scout|
-			scheduleitem = {
-				sPersonResponsible: scout,
-				sEventCode: eventcode,
-				iMatchNumber: matchnum,
-			}
-			if tempcounter < 5
-				currentteam = currentmatch['Teams'][tempcounter]
-				scheduleitem['iTeamNumber'] = currentteam['number']
-				station = currentteam['station']
-				currentcolor, stationnumber = station[0, station.length-1], station[station.length-1, station.length]
-				scheduleitem['iStationNumber'] = stationnumber.to_i
-				scheduleitem['bColor'] = (currentcolor === "Blue" ? true : false) #blue is true
-				scheduleitem['sItemType'] = 'matchscout'
-			else
-				scheduleitem['sItemType'] = 'scorescout'
-				bColor = (tempcounter == 6 ? true : false)
-			end
-			tempcounter++
-			scoutschedule << scheduleitem
-		end
-	end
-	#Same exact thing but for playoffs
-	numplayoffs.times do |matchnum|
-		currentmatch = playoffschedule[matchnum]
 		scouts = pickEightRandomScouts(eventcode, peopleresponsible)
 		tempcounter = 0 #0 through 7 of scout
 		scouts.each do |scout|
