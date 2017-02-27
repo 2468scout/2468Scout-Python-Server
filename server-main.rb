@@ -18,7 +18,7 @@ require_relative 'server-analysis.rb'
 
 ENV['SSL_CERT_FILE'] = 'human/cacert.pem'
 
-set :bind, 'http://scouting.westaaustin.org/' #localhost
+set :bind, '0.0.0.0' #'http://scouting.westaaustin.org/' #localhost
 set :port, 8080   #DO NOT CHANGE without coordination w/client
 enable :lock #One request processed at a time
 
@@ -286,7 +286,7 @@ post '/postTeamMatch' do
   begin
   	#Save team info
     saveTeamMatchInfo(request.body)
-
+ 	puts "I did it"
     #Rolling analysis
     #jsondata = JSON.parse(request.body)
 	#  eventcode = jsondata['sEventCode']
@@ -355,6 +355,18 @@ post '/setupScoutSchedule' do
 	end
 end
 
+post '/makePreMatch' do
+	begin
+		eventcode = params['eventCode']
+		matchnumber = params['matchNumber']
+		prematch = upcomingMatchSummary(eventcode, matchnumber)
+		content_type :json
+		status 200
+		body prematch.to_json
+	rescue
+		status 400
+	end
+end
 
 # dummy inputs for testing
 # saveTeamPitInfo({'sEventCode' => 'TXDA', 'iTeamNumber' => 2468, 'data' => 'This is a broken robot!'}.to_json)

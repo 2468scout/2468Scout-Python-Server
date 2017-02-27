@@ -1064,7 +1064,7 @@ def matchTable(eventcode, matchnumber)
 	happened
 end
 
-def upcomingMatchSummary()
+def upcomingMatchSummary(eventcode, matchnumber)
 	#PRIORITY ORDER
 	#alliance partners: performance, strengths and weaknesses
 	#opponents: performance, strengths and weaknesses
