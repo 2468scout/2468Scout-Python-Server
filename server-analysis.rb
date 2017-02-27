@@ -201,10 +201,12 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 		end
 	end
 
-	filename = "public/Events/#{eventcode}_Schedule.json"
-	jsonfile = File.open(filename, 'w')
-	jsonfile << scoutschedule.to_json
-	jsonfile.close
+	filename = "public/Events/#{eventcode}.json"
+	jsondata = retrieveJSON(filename) #Read what was previously in the file
+	jsondata['scheduleItemList'] = scoutschedule #Add to what was read in preparation for re-saving
+	jsonfile = File.open(filename, 'w') #Wipes the file for writing
+	jsonfile << jsondata #Re-writes the file
+	jsonfile.close 
 end
 
 def getSimpleTeamList(eventcode)
