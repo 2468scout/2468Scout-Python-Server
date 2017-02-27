@@ -288,18 +288,9 @@ post '/postTeamMatch' do
     saveTeamMatchInfo(request.body)
 
     #Rolling analysis
-    jsondata = JSON.parse(request.body)
-	  eventcode = jsondata['sEventCode']
-	  teamnumber = jsondata['iTeamNumber']
-    analysis = analyzeTeamAtEvent(teamnumber, eventcode)
-    #URGENT: guessing fuel requires guessing scores
-    #and guessing scores requires all 6 teammatches and the scorescouting
-    #so, need to wait then call analytics for all 6 teams after receiving all necessary data
-	
-	  #filename = "public/Teams/#{teamnumber}/#{teamnumber}.json"
-    #file = File.open(filename, 'w')
-    #file << 
-    #file << analysis.to_s
+    #jsondata = JSON.parse(request.body)
+	#  eventcode = jsondata['sEventCode']
+	#  teamnumber = jsondata['iTeamNumber']
 
     status 200
   rescue => e

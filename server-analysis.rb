@@ -21,7 +21,23 @@ qp_per_baseline, p_per_baseline = 5.0, 5.0 #Autonomous movement
 #NOTE: A gear in autonomous is worth slightly more than in teleop.
 #This is because completing a rotor gives 60 points in auto, but 40 in tele 
 
-
+#Keep from calculating analytics until all data is ready
+$how_much_data = {} #eventcodes keyed to {match numbers keyed to integers}
+#Any time matchscout or scorescout is received for a match, the counter increases
+#And if the counter is at least 8, triggers analytics for all 6
+def triggerAnalytics(eventcode, matchnumber)
+	qualdata = JSON.parse(reqapi("schedule/#{eventcode}?tournamentLevel=qual"))
+	qualiteams = qualdata['Schedule'].select{|key, hash| #search through the match hashes
+		hash['matchNumber'] == matchnumber #if match number matches, select it
+	}
+	teams = []
+	qualiteams['Teams'].each do |qualiteam|
+		teams << qualiteam['number'] #get just the team numbers
+	end
+	teams.each do |team|
+		analyzeTeamAtEvent(team, eventcode) #trigger analytics
+	end
+end
 
 ################################################
 ##############BEGIN FILE HANDLING###############
@@ -66,6 +82,14 @@ def saveTeamMatchInfo(jsondata)
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata.to_json #array of all MatchEvent objects into file. maybe?
 	jsonfile.close
+
+	#Triggering analytics:
+	#If there is at least 8 data (6 match scouts 2 score scouts) analyze everything
+	$how_much_data[eventcode] = {} unless $how_much_data[eventcode]
+	$how_much_data[eventcode][matchnumber] = 0 unless $how_much_data[eventcode][matchnumber]
+	$how_much_data[eventcode][matchnumber]++
+	triggerAnalytics(eventcode, matchnumber) if $how_much_data[eventcode][matchnumber] >= 8
+
 	#Possible extra task: compare existing json to saved json in case of double-saving
 	puts "Successfully saved " + filename	
 end
@@ -97,6 +121,12 @@ def saveScoreScoutInfo(jsondata)
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata.to_json
 	jsonfile.close
+
+	#Trigger analytics for all 6 teams if we have enough data
+	$how_much_data[eventcode] = {} unless $how_much_data[eventcode]
+	$how_much_data[eventcode][matchnumber] = 0 unless $how_much_data[eventcode][matchnumber]
+	$how_much_data[eventcode][matchnumber]++
+	triggerAnalytics(eventcode, matchnumber) if $how_much_data[eventcode][matchnumber] >= 8
 end
 
 def saveCalculateHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist, laccuracylist, hloclist, lloclist)
