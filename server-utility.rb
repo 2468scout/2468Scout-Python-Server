@@ -53,11 +53,13 @@ def saveEventsData(frcEvents)
 end
 
 def saveTeamMatchInfo(jsondata)
+	puts "=========================="
 	jsondata = JSON.parse(jsondata)
 	eventcode = jsondata['sEventCode']
 	teamnumber = jsondata['iTeamNumber']
 	matchnumber = jsondata['iMatchNumber']
-	filename = "public/TeamMatches/"+eventcode+"_TeamMatch"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
+	filename = "public/TeamMatches/team#{teamnumber}_match#{matchnumber}_event#{eventcode}.json"
+	is_resaved = ((File.exists? filename) ? true : false)
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata.to_json #array of all MatchEvent objects into file. maybe?
 	jsonfile.close
@@ -66,11 +68,15 @@ def saveTeamMatchInfo(jsondata)
 	#If there is at least 8 data (6 match scouts 2 score scouts) analyze everything
 	$how_much_data[eventcode] = {} unless $how_much_data[eventcode]
 	$how_much_data[eventcode][matchnumber] = 0 unless $how_much_data[eventcode][matchnumber]
-	$how_much_data[eventcode][matchnumber]++
+	unless is_resaved
+		$how_much_data[eventcode][matchnumber] += 1
+		puts "Add 1 to how_much_data. Now #{$how_much_data[eventcode][matchnumber]}"
+	end
 	triggerAnalytics(eventcode, matchnumber) if $how_much_data[eventcode][matchnumber] >= 8
 
 	#Possible extra task: compare existing json to saved json in case of double-saving
 	puts "Successfully saved " + filename	
+	puts "=========================="
 end
 
 def saveTeamPitInfo(jsondata)
@@ -223,6 +229,11 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 	jsonfile = File.open(filename, 'w') #Wipes the file for writing
 	jsonfile << jsondata #Re-writes the file
 	jsonfile.close 
+
+	filename = "public/Events/#{eventcode}_Schedule.json"
+	jsonfile = File.open(filename, 'w')
+	jsonfile << scoutschedule
+	jsonfile.close
 end
 
 def addRematchToScoutSchedule(eventcode, matchnumber)
@@ -390,7 +401,7 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 
 	matchevents = [] #We need all the matchevents that happened in the match
 	sortedmatchevents = {}
-	Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_*.json") do |filename|
+	Dir.glob("public/TeamMatches/*_match#{matchnumber}_event#{eventcode}.json") do |filename|
 		tempjson = retrieveJSON(filename)
 		break unless tempjson['bColor'] == matchcolor #blue is true
 		

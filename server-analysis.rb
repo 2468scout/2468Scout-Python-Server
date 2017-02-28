@@ -83,7 +83,7 @@ def guessFuelInMatch(teamnums, scores, matchcolor, eventcode, matchnumber, maint
 
 		matchevents = [] #We need all the matchevents that happened in the match
 		sortedmatchevents = {}
-		Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_Team#{teamnumber}.json") do |filename|
+		Dir.glob("public/TeamMatches/team#{teamnumber}_match#{matchnumber}_event#{eventcode}.json") do |filename|
 			tempjson = retrieveJSON(filename)
 			#break unless tempjson['bColor'] == matchcolor #blue is true
 			if tempjson['MatchEvents']
@@ -282,7 +282,7 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 			filenames << filename
 			pitfilenames << filename
 		end
-		Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch*_Team#{teamnumber}.json") do |filename|
+		Dir.glob("public/TeamMatches/team#{teamnumber}_match*_event#{eventcode}.json") do |filename|
 			filenames << filename
 			teammatchfilenames << filename
 		end
@@ -349,7 +349,7 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 		matchnums.each_with_index do |matchnum, i|
 			matchcolor = matchcolors[i]
 			matchpartners[matchnum] = []
-			Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnum}_*.json") do |filename|
+			Dir.glob("public/TeamMatches/*_match#{matchnumber}_event#{eventcode}.json") do |filename|
 				tempjson = retrieveJSON(filename)
 				matchpartners[matchnum] << tempjson['iTeamNumber'] if tempjson['bColor'] == matchcolor #blue is true
 			end
@@ -660,7 +660,7 @@ def matchTable(eventcode, matchnumber)
 	#Make a table: timestamps, match event type, team, human-readable note
 	#This way we can see a match at a glance
 	filename = []
-	Dir.glob("public/TeamMatches/#{eventcode}_TeamMatch#{matchnumber}_*.json") do |filename|
+	Dir.glob("public/TeamMatches/*_match#{matchnumber}_event#{eventcode}.json") do |filename|
 		filenames << filename
 	end
 
@@ -686,7 +686,13 @@ def upcomingMatchSummary(eventcode, matchnumber)
 	#alliance partners: performance, strengths and weaknesses
 	#opponents: performance, strengths and weaknesses
 	#heat maps
-
+	puts "Upcoming match summary for #{eventcode} #{matchnumber}"
+	updateEventFromAPI(eventcode)
+	nextmatch = {
+		iMatchNumber: matchnumber,
+		sEventCode: eventcode
+	}
+	return nextmatch
 	#SimpleTeams
 	#heat maps
 	#elo / rankings

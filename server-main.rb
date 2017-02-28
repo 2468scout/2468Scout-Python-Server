@@ -217,7 +217,7 @@ get '/getTeamMatch' do #Return a JSON of match data for a particular team?? (idk
     eventcode = params['eventCode']
     teamnumber = params['teamNumber']
     matchnumber = params['matchNumber']
-    filename = "public/TeamMatches/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
+    filename = "public/TeamMatches/team#{teamnumber}_match#{matchnumber}_event#{eventcode}.json"
     retrieveJSON(filename)
   rescue => e
     puts "Error in getteammatch #{e.class}, message is #{e.message}"
@@ -238,7 +238,7 @@ get '/getTeamMatchExistence' do #Check if a teammatch exists in the server's dat
 	eventcode = params['eventCode']
     teamnumber = params['teamNumber']
     matchnumber = params['matchNumber']
-    filename = "public/TeamMatches/"+eventcode+"_Match"+matchnumber.to_s+"_Team"+teamnumber.to_s+".json"
+    filename = "public/TeamMatches/team#{teamnumber}_match#{matchnumber}_event#{eventcode}.json"
     if File.exists? filename
 		  return 'true' #We have the data
     else
@@ -247,8 +247,11 @@ get '/getTeamMatchExistence' do #Check if a teammatch exists in the server's dat
 end
 
 get '/getFileExistence' do
-	filename = request.env["FILEPATH"]
-	if File.exists?filename
+	filename = "public/#{params['FILEPATH']}"
+	puts "I am going to find #{filename}"
+	puts "It is here? #{File.exists? filename}"
+	#filename = request.env["FILEPATH"]
+	if File.exists? filename
 		return 'true'
 	else
 		return 'false'
