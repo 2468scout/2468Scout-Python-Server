@@ -179,6 +179,13 @@ def pickEightRandomScouts(eventcode, peopleresponsible)
 	end
 	prng = Random.new(seed)
 
+	peopleresponsible.each_with_index do |person, index|
+		if person.include? "!" && numbers.length > 7
+			puts "A !priority scout has been detected. #{person} will be scouting every match."
+			numbers.add(index)
+		end
+	end
+
 	#Generate numbers
 	while numbers.length < 8 do
 		numbers.add(prng.rand(min..max))
