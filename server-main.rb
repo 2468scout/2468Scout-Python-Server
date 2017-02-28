@@ -14,6 +14,7 @@ require 'openssl' #Not sure if we need this but we've been having some SSL awkwa
 require 'ostruct' #Turn JSON into instant objects! Huzzah!
 require_relative 'server-classes.rb'
 require_relative 'server-analysis.rb'
+require_relative 'server-utility.rb'
 #bundle install
 
 ENV['SSL_CERT_FILE'] = 'human/cacert.pem'
