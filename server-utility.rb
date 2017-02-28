@@ -320,7 +320,7 @@ def updateEventFromAPI(eventcode)
 	      tempEvent.matchList << tempMatch
 	    end
 	  end
-	end
+	
 	placeholder_array.each do |frcevent|
 	  frcevent.simpleTeamList = []
 	  receivedTeamList = {}
