@@ -268,12 +268,12 @@ end
 post '/postPit' do
   begin
     #Save info
-    saveTeamPitInfo(request.body)
+    saveTeamPitInfo(request.body.string)
 
     #Rolling analysis later
-    jsondata = JSON.parse(request.body)
-	  eventcode = jsondata['sEventCode']
-	  teamnumber = jsondata['iTeamNumber']
+    #jsondata = JSON.parse(request.body.string)
+	  #eventcode = jsondata['sEventCode']
+	  #teamnumber = jsondata['iTeamNumber']
 	  #analyzeTeamPit(teamnumber, eventcode)
 
     status 200
@@ -286,7 +286,7 @@ end
 post '/postTeamMatch' do
   begin
   	#Save team info
-    saveTeamMatchInfo(request.body)
+    saveTeamMatchInfo(request.body.string)
  	puts "I did it"
     #Rolling analysis
     #jsondata = JSON.parse(request.body)
@@ -303,7 +303,7 @@ end
 post '/postMatchScores' do
 	begin
 		#Real-time scorekeeping
-		saveScoreScoutInfo(request.body)
+		saveScoreScoutInfo(request.body.string)
 		
 		status 200
 	rescue => e
@@ -349,7 +349,7 @@ post '/setupScoutSchedule' do
 	begin
 		eventcode = params['eventCode']
 		puts "I am ready to make scout schedule at #{eventcode}"
-		saveCalculateScoutSchedule(request.body, eventcode)
+		saveCalculateScoutSchedule(request.body.string, eventcode)
 		status 200
 	rescue
 		status 400
