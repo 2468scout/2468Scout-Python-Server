@@ -254,6 +254,13 @@ def addRematchToScoutSchedule(eventcode, matchnumber)
 	jsonfile << jsondata.to_json
 	jsonfile.close
 
+	filename = "public/Events/#{eventcode}_Schedule.json"
+	jsondata = retrieveJSON(filename)
+	jsondata << newitems
+	jsonfile = File.open(filename, 'w')
+	jsonfile << jsondata
+	jsonfile.close
+
 	$how_much_data[matchnumber] = 0 #We no longer have relevant match data
 end
 
@@ -290,6 +297,46 @@ def updateEventFromAPI(eventcode)
 	#finally, return a success/failure message
 	updateScores(eventcode)
 	updateRanks(eventcode)
+
+	puts("update an event")
+	eventsString = reqapi('events?eventCode=#{eventcode}')
+	#puts("Results from FRCAPI events list: " + eventsString)
+	event_to_update = JSON.parse(eventsString) #Get all the events from the API so we don't have to keep bothering them
+	placeholder_array = []
+	tempEvent = FRCEvent.new(event_to_update['name'], event_to_update['code'])
+	placeholder_array << tempEvent
+	  receivedEvent = {}
+	  receivedEvent = JSON.parse(reqapi('schedule/' + tempEvent.sEventCode + '?tournamentLevel=qual'))
+	  tempEvent.matchList = []
+	  unless receivedEvent.empty?
+	    receivedEvent['Schedule'].each do |match|
+	      tempMatch = Match.new(match['matchNumber'], nil, nil, nil, nil, "qual", nil)
+	      tempMatch.teamMatchList = []
+	      match['Teams'].each do |team|
+	        tempMatch.teamMatchList << TeamMatch.new(team['number'], match['matchNumber'], 
+	        /\d+/.match(team['station']).try(:[], 0), # I have literally no idea what this does, but it should work lol
+	        nil, nil, tempEvent.sEventCode, nil, team['station'][0] == "B", nil)
+	      end
+	      tempEvent.matchList << tempMatch
+	    end
+	  end
+	end
+	placeholder_array.each do |frcevent|
+	  frcevent.simpleTeamList = []
+	  receivedTeamList = {}
+	  receivedTeamList = JSON.parse(reqapi('teams?eventCode=' + frcevent.sEventCode))
+	  if !receivedTeamList.empty?
+	    receivedTeamList['teams'].each do |receivedTeam|
+	      frcevent.simpleTeamList << SimpleTeam.new(receivedTeam['nameShort'],receivedTeam["teamNumber"])
+	    end
+	  end
+	end
+	schedulename = "public/Events/#{event.sEventCode}_Schedule.json"
+	if File.exist? schedulename
+	  schedulething = retrieveJSON(schedulename)
+	  placeholder_array[0]['scheduleItemList'] << schedulething
+	end
+	saveEventsData(placeholder_array)
 end
 
 def updateScores(eventcode)
