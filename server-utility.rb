@@ -341,6 +341,13 @@ def sortMatchEvents(matchevents = [])
 		end
 	end
 	sortedevents["AUTOSTUFF"] = autoevents if autoevents.length > 0 #Additional separate array to isolate autonomous
+	
+	sortedevents['LOW_GOAL_MISS'].each_with_index do |lmiss, k|
+		sortedevents['LOW_GOAL_STOP'][k]['iCount'] = lmiss['iCount']
+	end
+	sortedevents['HIGH_GOAL_MISS'].each_with_index do |hmiss, k|
+		sortedevents['HIGH_GOAL_STOP'][k]['iCount'] = hmiss['iCount']
+	end
 	sortedevents
 	
 	#sortedevents['GEAR_SCORE'] => [matchevent1, matchevent2, ...] etc
