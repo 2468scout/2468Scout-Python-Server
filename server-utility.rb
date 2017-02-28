@@ -178,7 +178,6 @@ end
 
 def saveCalculateScoutSchedule(jsondata, eventcode)
 	#create a scout schedule, then save it
-	qualscoutschedule = []
 	scoutschedule = [] #ScheduleItems
 	#sPersonResponsible, sItemType, sEventCod, iMatchNumber, iTeamNumber, iStationNumber, bColor
 
@@ -199,6 +198,7 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 				sPersonResponsible: scout,
 				sEventCode: eventcode,
 				iMatchNumber: matchnum,
+				bRematch: false
 			}
 			if tempcounter < 5
 				currentteam = currentmatch['Teams'][tempcounter]
@@ -223,6 +223,27 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 	jsonfile = File.open(filename, 'w') #Wipes the file for writing
 	jsonfile << jsondata #Re-writes the file
 	jsonfile.close 
+end
+
+def addRematchToScoutSchedule(eventcode, matchnumber)
+	puts "Add rematch for match #{matchnumber}"
+	filename = "public/events/#{eventcode}.json"
+	jsondata = retrieveJSON(filename)
+	jsondata = JSON.parse(jsondata)
+	previousitems = jsondata['scheduleItemList'].select { |scheduleItem|
+		(scheduleItem['iMatchNumber'] == matchnumber) && (scheduleItem['bRematch'] == false)
+	} 
+	#we want the same data as before, just another item with bRematch = true
+	newitems = previousitems
+	newitems.each do |newitem|
+		newitem['bRematch'] = true
+	end
+	jsondata['scheduleItemList'] << newitems
+	jsonfile = File.open(filename, 'w')
+	jsonfile << jsondata.to_json
+	jsonfile.close
+
+	$how_much_data[matchnumber] = 0 #We no longer have relevant match data
 end
 
 def getSimpleTeamList(eventcode)

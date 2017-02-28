@@ -356,6 +356,17 @@ post '/setupScoutSchedule' do
 	end
 end
 
+post '/addScoutScheduleRematch' do
+	begin
+		eventcode = params['eventCode']
+		matchnumber = params['matchNumber']
+		addRematchToScoutSchedule(eventcode, matchnumber)
+		status 200
+	rescue
+		status 400
+	end
+end
+
 post '/makePreMatch' do
 	begin
 		eventcode = params['eventCode']
