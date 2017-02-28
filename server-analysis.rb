@@ -454,6 +454,7 @@ def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 		low_hit = fuelguesses[3]
 
 		#Begin working with numbers
+
 		###AUTONOMOUS BASELINE###
 		if baseline.length > 0
 			basematches = {} #Key: matchnum, val: {points to contrib}
@@ -498,7 +499,17 @@ def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 		end
 		analyzed['fLowFuelPoints'] = low_fuel_points
 		analyzed['fAvgFuelPoints'] = (high_fuel_points + low_fuel_points) / nummatches.to_f
-		puts "This team has contributed probably #{high_fuel_points} worth of high goals with a #{analyzed['fHighFuelAccuracy']} high goal accuracy."
+
+		fuelqp = high_fuel_points + low_fuel_points
+		fuelrp = ((high_hit.to_f / 3.0) + (low_hit.to_f / 9.0)) / 40.0 #fuel into pressure, pressure into rp. WARNING: IGNORES AUTONOMOUS
+		fuelrp = 1.0 if fuelrp > 1.0
+		fuelp = fuelqp + 20 * fuelrp
+
+		qpcontrib += fuelqp
+		rpcontrib += fuelrp
+		pcontrib += fuelp
+
+		puts "This team has contributed probably #{fuelqp} QP of high goals (#{fuelrp} RP) with a #{analyzed['fHighFuelAccuracy']} high goal accuracy."
 
 		###GEARS###
 		if gear_load.length > 0
