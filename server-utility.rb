@@ -160,7 +160,6 @@ def pickEightRandomScouts(peopleresponsible)
 
 	peopleresponsible.each_with_index do |person, indx|
 		if (person.include? "!") && numbers.length > 7
-			puts "A !priority scout has been detected. #{person} will be scouting every match."
 			numbers.add(indx)
 		end
 	end
@@ -190,10 +189,8 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 	qualschedule = qualdata['Schedule']
 	numquals = qualschedule.length
 	numquals.times do |matchnum|
-    puts("Making stuff for match number #{matchnum + 1}")
 		currentmatch = qualschedule[matchnum]
 		scouts = pickEightRandomScouts(peopleresponsible)
-    puts("Picked 8 scouts")
 		tempcounter = 0 #0 through 7 of scout
 		scouts.each do |scout|
 			scheduleitem = {
@@ -202,9 +199,7 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 				iMatchNumber: (matchnum + 1),
 				bRematch: false
 			}
-      puts("Made the base scheduleItem")
 			if tempcounter < 6
-        puts("Making match scout!")
 				currentteam = currentmatch['Teams'][tempcounter]
 				scheduleitem['iTeamNumber'] = currentteam['teamNumber']
 				station = currentteam['station']
@@ -213,7 +208,6 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 				scheduleitem['bColor'] = ("#{currentcolor}" === "Blue" ? true : false) #blue is true
 				scheduleitem['sItemType'] = 'matchscout'
 			else
-        puts("Making score scout!")
 				scheduleitem['sItemType'] = 'scorescout'
 				scheduleitem['bColor'] = (tempcounter == 6 ? true : false)
 			end
