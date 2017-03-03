@@ -52,6 +52,7 @@ def saveEventsData(frcEvents)
         schedulename = "public/Events/#{event.sEventCode}_Schedule.json"
 		if File.exist? schedulename
 		  schedulething = retrieveJSON(schedulename)
+		  saveevent['scheduleItemList'] = []
 		  saveevent['scheduleItemList'] << schedulething
 		end
 
