@@ -707,8 +707,25 @@ def upcomingMatchSummary(eventcode, matchnumber)
 	updateEventFromAPI(eventcode)
 	nextmatch = {
 		iMatchNumber: matchnumber,
-		sEventCode: eventcode
+		sEventCode: eventcode,
+		redSimpleTeams: [],
+		blueSimpleTeams: []
 	}
+	apimatch = reqapi("schedule/#{eventcode}?tournamentLevel=qual&start=#{matchnumber}&end=#{matchnumber}")
+	apimatch = JSON.parse(apimatch)
+	apimatch = apimatch['Schedule'][0] #should be he only item in the hash
+	
+	apimatch['Teams'].each_with_index do |matchteam, i|
+		apiteam = reqapi("teams?teamNumber=#{matchteam}")
+		apiteam = JSON.parse(apiteam)
+		apiteam = apiteam['teams'][0]
+		if i < 3
+			nextmatch['blueSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamname: apiteam['nameShort']}
+		elsif i < 6
+			nextmatch['redSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamN1ame: apiteam['nameShort']}
+		end
+	
+
 	return nextmatch
 	#SimpleTeams
 	#heat maps
