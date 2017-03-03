@@ -44,6 +44,8 @@ $events = {} #All events this season, from API
 
 #$cache = {} #Stuff that the clients are asking us for
 
+$toggle_manual_input = false #Tells the server to bypass api() and instead wait for manual data to be sent
+
 def api(path,lastmodified = nil) #Returns the FRC API file for the specified path in JSON format.
   #Warning: api() returns an HTTP response while reqapi() returns a JSON string.
   begin
@@ -58,15 +60,28 @@ def api(path,lastmodified = nil) #Returns the FRC API file for the specified pat
     #puts options['If-Modified-Since']
     #open("#{$server}#{path}", options).read
     toreturn = {}
-    open("#{$server}#{path}", options) do |response|
-    	body = ""
-    	response.each_line do |line|
-    		body << line.to_s
+
+    if $toggle_manual_input
+    	puts "I want to access #{path}, but manual input is turned on! Please type the filename to use in its place."
+    	filename = ""
+    	while(!File.exists? filename)
+    		puts "Try file name: "
+    		filename = gets
+    		puts "Searching for the file #{filename}..."
     	end
-    	#response.base_uri.to_s
-    	toreturn = OpenStruct.new(:body => body, :meta => response.meta, :status => response.status)
-    	#must create a persistent object out of the response, as response is not accessible outside this method
-    end
+    	jsondata = retrieveJSON(filename)
+    	toreturn = OpenStruct.new(:body => jsondata, :meta => {}, :staus => ['200', 'OK']) 
+    else
+	    open("#{$server}#{path}", options) do |response|
+	    	body = ""
+	    	response.each_line do |line|
+	    		body << line.to_s
+	    	end
+	    	#response.base_uri.to_s
+	    	toreturn = OpenStruct.new(:body => body, :meta => response.meta, :status => response.status)
+	    	#must create a persistent object out of the response, as response is not accessible outside this method
+	    end
+	end
     toreturn
   rescue => e
   	puts "Something went wrong #{e.class}, message is #{e.message}"
@@ -96,10 +111,9 @@ def reqapi(path, override = false) #Make sure we don't ask for the same thing to
       	myrequest = api(req)
       end
 
-      puts "My request's code is #{myrequest.status}"
+      puts "My request's code is #{myrequest.status} (304 means not modified)"
 
       unless myrequest.status[0].to_s === '304'
-      	puts "it has been modified"
         $requests[req] = { #new request so create new request
             data: myrequest,
             time: Time.now.to_f,
@@ -266,6 +280,10 @@ get '/getMatchTable' do
     output
 end
 
+get '/isInputManual' do #is manual input toggled?
+	body $toggle_manual_input
+end
+
 ### POST REQUESTS
 
 post '/postPit' do
@@ -383,11 +401,6 @@ post '/makePreMatch' do
 	end
 end
 
-# dummy inputs for testing
-# saveTeamPitInfo({'sEventCode' => 'TXDA', 'iTeamNumber' => 2468, 'data' => 'This is a broken robot!'}.to_json)
-# saveTeamMatchInfo({'sEventCode' => 'TXSA', 'iTeamNumber' => 2468, 'iMatchNumber' => 10, 'data' => 'This team scored low!'}.to_json)
-# saveTeamMatchInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'iMatchNumber' => 3, 'data' => 'This team scored high!'}.to_json)
-# saveTeamMatchInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'iMatchNumber' => 40, 'data' => 'This team broke down!'}.to_json)
-# saveTeamPitInfo({'sEventCode' => 'CASJ', 'iTeamNumber' => 2468, 'data' => 'This is a cool robot!'}.to_json)
-# analyzeTeamAtEvent(2468,'CASJ')
-# 5 files, 3 relevant
+post '/toggleManualInput' do
+	$toggle_manual_input = !$toggle_manual_input
+end
