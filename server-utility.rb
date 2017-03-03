@@ -110,7 +110,7 @@ def saveScoreScoutInfo(jsondata)
 	#Trigger analytics for all 6 teams if we have enough data
 	$how_much_data[eventcode] = {} unless $how_much_data[eventcode]
 	$how_much_data[eventcode][matchnumber] = 0 unless $how_much_data[eventcode][matchnumber]
-	$how_much_data[eventcode][matchnumber]++
+	$how_much_data[eventcode][matchnumber] += 1
 	triggerAnalytics(eventcode, matchnumber) if $how_much_data[eventcode][matchnumber] >= 8
 end
 
@@ -149,31 +149,25 @@ def saveCalculateHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist,
 	jsonfile.close
 end
 
-def pickEightRandomScouts(eventcode, peopleresponsible)
+def pickEightRandomScouts(peopleresponsible)
 	#eventcode is used as a seed for the pseudorandom number gen
 	result = [] #eight unique scouts (peopleresponsible)
 	numbers = Set.new #eight unique index
 	return -1 if peopleresponsible.length < 8
 
 	#Setup PRNG
-	min = 0
-	max = peopleresponsible.length - 1
-	seed = 1
-	eventcode.each_byte do |c|
-		seed += c
-	end
-	prng = Random.new(seed)
+	prng = Random.new
 
-	peopleresponsible.each_with_index do |person, index|
-		if person.include? "!" && numbers.length > 7
+	peopleresponsible.each_with_index do |person, indx|
+		if (person.include? "!") && numbers.length > 7
 			puts "A !priority scout has been detected. #{person} will be scouting every match."
-			numbers.add(index)
+			numbers.add(indx)
 		end
 	end
 
 	#Generate numbers
 	while numbers.length < 8 do
-		numbers.add(prng.rand(min..max))
+		numbers.add(prng.rand(0..peopleresponsible.length-1))
 	end
 	numbers.each do |numbr|
 		result << peopleresponsible[numbr]
@@ -195,51 +189,48 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 	qualdata = JSON.parse(reqapi("schedule/#{eventcode}?tournamentLevel=qual"))
 	qualschedule = qualdata['Schedule']
 	numquals = qualschedule.length
-  puts("There are #{qualschedule.length} quals!")
 	numquals.times do |matchnum|
     puts("Making stuff for match number #{matchnum + 1}")
 		currentmatch = qualschedule[matchnum]
-    puts("That's #{currentmatch.iMatchNumber}")
-		scouts = pickEightRandomScouts(eventcode, peopleresponsible)
+		scouts = pickEightRandomScouts(peopleresponsible)
     puts("Picked 8 scouts")
 		tempcounter = 0 #0 through 7 of scout
 		scouts.each do |scout|
 			scheduleitem = {
 				sPersonResponsible: scout,
 				sEventCode: eventcode,
-				iMatchNumber: matchnum,
+				iMatchNumber: (matchnum + 1),
 				bRematch: false
 			}
       puts("Made the base scheduleItem")
-			if tempcounter < 5
+			if tempcounter < 6
         puts("Making match scout!")
 				currentteam = currentmatch['Teams'][tempcounter]
-				scheduleitem['iTeamNumber'] = currentteam['number']
+				scheduleitem['iTeamNumber'] = currentteam['teamNumber']
 				station = currentteam['station']
 				currentcolor, stationnumber = station[0, station.length-1], station[station.length-1, station.length]
 				scheduleitem['iStationNumber'] = stationnumber.to_i
-				scheduleitem['bColor'] = (currentcolor === "Blue" ? true : false) #blue is true
+				scheduleitem['bColor'] = ("#{currentcolor}" === "Blue" ? true : false) #blue is true
 				scheduleitem['sItemType'] = 'matchscout'
 			else
         puts("Making score scout!")
 				scheduleitem['sItemType'] = 'scorescout'
-				bColor = (tempcounter == 6 ? true : false)
+				scheduleitem['bColor'] = (tempcounter == 6 ? true : false)
 			end
-			tempcounter++
+			tempcounter += 1
 			scoutschedule << scheduleitem
 		end
 	end
-
 	filename = "public/Events/#{eventcode}.json"
 	jsondata = retrieveJSON(filename) #Read what was previously in the file
 	jsondata['scheduleItemList'] = scoutschedule #Add to what was read in preparation for re-saving
 	jsonfile = File.open(filename, 'w') #Wipes the file for writing
-	jsonfile << jsondata #Re-writes the file
+	jsonfile << jsondata.to_json #Re-writes the file
 	jsonfile.close 
 
 	filename = "public/Events/#{eventcode}_Schedule.json"
 	jsonfile = File.open(filename, 'w')
-	jsonfile << scoutschedule
+	jsonfile << scoutschedule.to_json
 	jsonfile.close
 end
 
@@ -317,13 +308,6 @@ def updateEventFromAPI(eventcode)
 	  tempEvent.matchList = []
 	  unless receivedEvent.empty?
 	    receivedEvent['Schedule'].each do |match|
-	      tempMatch = Match.new(match['matchNumber'], nil, nil, nil, nil, "qual", nil)
-	      tempMatch.teamMatchList = []
-	      match['Teams'].each do |team|
-	        tempMatch.teamMatchList << TeamMatch.new(team['number'], match['matchNumber'], 
-	        /\d+/.match(team['station']).try(:[], 0), # I have literally no idea what this does, but it should work lol
-	        nil, nil, tempEvent.sEventCode, nil, team['station'][0] == "B", nil)
-	      end
 	      tempEvent.matchList << tempMatch
 	    end
 	  end
