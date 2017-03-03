@@ -336,7 +336,24 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 		analysis['sWTL'] = "#{teamrank['wins']} / #{teamrank['ties']} / #{teamrank['losses']}" #Wins / Ties / Losses string
 
 		#Add pit info
-		#IANNNNNNNNNNNNNNNNN
+		case pitfilenames.length
+		when 0
+			puts "Could not complete pit analysis: No pit file found"
+		when 1
+			puts "Found the pit file! #{pitfilenames[0]}"
+			pitinfo = retrieveJSON(pitfilenames[0])
+			pitinfo.each do |key, val|
+				analysis["#{key}Pit"] = val
+			end
+		else
+			puts "For some reason we detected more pit files than should be possible, we are going to use the first one."
+			pitinfo = retrieveJSON(pitfilenames[0])
+			pitinfo.each do |key, val|
+				analysis["#{key}Pit"] = val
+			end
+		end
+
+
 
 		#Analyze match events (accuracy, contribution, etc)
 		#Heat map data for fuel, necessary to define here because it is calculated alongside other fuel data
