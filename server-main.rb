@@ -289,13 +289,6 @@ post '/postPit' do
   begin
     #Save info
     saveTeamPitInfo(request.body.string)
-
-    #Rolling analysis later
-    #jsondata = JSON.parse(request.body.string)
-	  #eventcode = jsondata['sEventCode']
-	  #teamnumber = jsondata['iTeamNumber']
-	  #analyzeTeamPit(teamnumber, eventcode)
-
     status 200
   rescue => e
     puts e
@@ -307,12 +300,6 @@ post '/postTeamMatch' do
   begin
   	#Save team info
     saveTeamMatchInfo(request.body.string)
- 	puts "I did it"
-    #Rolling analysis
-    #jsondata = JSON.parse(request.body)
-	#  eventcode = jsondata['sEventCode']
-	#  teamnumber = jsondata['iTeamNumber']
-
     status 200
   rescue => e
     puts "Error in postteammatch #{e.class}, message is #{e.message}"

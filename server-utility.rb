@@ -80,18 +80,25 @@ def saveTeamMatchInfo(jsondata)
 end
 
 def saveTeamPitInfo(jsondata)
+	puts "btw the string is #{jsondata}"
 	jsondata = JSON.parse(jsondata)
 	eventcode = jsondata['sEventCode']
 	teamnumber = jsondata['iTeamNumber']
+	Dir.mkdir "public/Teams/#{teamnumber}" unless File.exists? "public/Teams/#{teamnumber}"
 	filename = "public/Teams/#{teamnumber}/#{eventcode}_Pit_Team#{teamnumber}.json"
-	
-	#existingjson = '{}'
-	#if File.exists? filename
-	#	existingjson = retrieveJSON(filename)
-	#end
+	puts "finna start saving #{filename}"
+	existingjson = {}
+	if File.exists? filename #old data
+		existingjson = retrieveJSON(filename)
+		puts "we got old data"
+	end
+	jsondata.each do |key, val| #new data keys to old data
+		puts "shit "
+		existingjson[key] = val #but leaves anything it doesnt change
+	end
 	
 	jsonfile = File.open(filename,'w')
-	jsonfile << jsondata.to_json
+	jsonfile << existingjson.to_json
 	jsonfile.close
 end
 
@@ -145,7 +152,7 @@ def saveCalculateHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist,
 	#Saving data
 	filename = "public/Teams/#{teamnumber}/#{eventcode}_HeatMaps.json"
 	jsonfile = File.open(filename,'w')
-	jsonfile << jsondata
+	jsonfile << jsondata.to_json
 	jsonfile.close
 end
 
@@ -206,9 +213,9 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 				currentcolor, stationnumber = station[0, station.length-1], station[station.length-1, station.length]
 				scheduleitem['iStationNumber'] = stationnumber.to_i
 				scheduleitem['bColor'] = ("#{currentcolor}" === "Blue" ? true : false) #blue is true
-				scheduleitem['sItemType'] = 'matchscout'
+				scheduleitem['sItemType'] = 'matchScout'
 			else
-				scheduleitem['sItemType'] = 'scorescout'
+				scheduleitem['sItemType'] = 'scoreScout'
 				scheduleitem['bColor'] = (tempcounter == 6 ? true : false)
 			end
 			tempcounter += 1
