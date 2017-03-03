@@ -195,9 +195,13 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 	qualdata = JSON.parse(reqapi("schedule/#{eventcode}?tournamentLevel=qual"))
 	qualschedule = qualdata['Schedule']
 	numquals = qualschedule.length
+  puts("There are #{qualschedule.length} quals!")
 	numquals.times do |matchnum|
+    puts("Making stuff for match number #{matchnum + 1}")
 		currentmatch = qualschedule[matchnum]
+    puts("That's #{currentmatch.iMatchNumber}")
 		scouts = pickEightRandomScouts(eventcode, peopleresponsible)
+    puts("Picked 8 scouts")
 		tempcounter = 0 #0 through 7 of scout
 		scouts.each do |scout|
 			scheduleitem = {
@@ -206,7 +210,9 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 				iMatchNumber: matchnum,
 				bRematch: false
 			}
+      puts("Made the base scheduleItem")
 			if tempcounter < 5
+        puts("Making match scout!")
 				currentteam = currentmatch['Teams'][tempcounter]
 				scheduleitem['iTeamNumber'] = currentteam['number']
 				station = currentteam['station']
@@ -215,6 +221,7 @@ def saveCalculateScoutSchedule(jsondata, eventcode)
 				scheduleitem['bColor'] = (currentcolor === "Blue" ? true : false) #blue is true
 				scheduleitem['sItemType'] = 'matchscout'
 			else
+        puts("Making score scout!")
 				scheduleitem['sItemType'] = 'scorescout'
 				bColor = (tempcounter == 6 ? true : false)
 			end
