@@ -45,8 +45,18 @@ def saveEventsData(frcEvents)
         else
             puts("Creating new file #{filename}")
         end
+
+        saveevent = event.to_json(options = {})
+        saveevent = JSON.parse(saveevent)
+
+        schedulename = "public/Events/#{event.sEventCode}_Schedule.json"
+		if File.exist? schedulename
+		  schedulething = retrieveJSON(schedulename)
+		  saveevent['scheduleItemList'] << schedulething
+		end
+
         jsonfile = File.open(filename,'w')
-		jsonfile << event.to_json(options = {})
+		jsonfile << saveevent.to_json
 		jsonfile.close
 		puts "Successfully saved " + filename
 	end
@@ -320,11 +330,7 @@ def updateEventFromAPI(eventcode)
 	    end
 	  end
 	end
-	schedulename = "public/Events/#{event.sEventCode}_Schedule.json"
-	if File.exist? schedulename
-	  schedulething = retrieveJSON(schedulename)
-	  placeholder_array[0]['scheduleItemList'] << schedulething
-	end
+	
 	saveEventsData(placeholder_array)
 end
 
