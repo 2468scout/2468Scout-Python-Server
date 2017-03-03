@@ -150,13 +150,12 @@ $frcEvents.each do |frcevent|
   frcevent.matchList = []
   unless receivedEvent.empty?
     receivedEvent['Schedule'].each do |match|
-      tempMatch = Match.new(match['matchNumber'], nil, nil, nil, nil, "qual", nil)
-      tempMatch.teamMatchList = []
-      match['Teams'].each do |team|
-        tempMatch.teamMatchList << TeamMatch.new(team['number'], match['matchNumber'], 
-        /\d+/.match(team['station']).try(:[], 0), # I have literally no idea what this does, but it should work lol
-        nil, nil, frcevent.sEventCode, nil, team['station'][0] == "B", nil)
-      end
+      tempMatch = Match.new(match['matchNumber'], nil, nil, nil, nil, "qual", nil, [])
+      #match['Teams'].each do |team|
+      #  tempMatch.teamMatchList << TeamMatch.new(team['number'], match['matchNumber'], 
+      #  /\d+/.match(team['station']).try(:[], 0), # I have literally no idea what this does, but it should work lol
+      #  nil, nil, frcevent.sEventCode, nil, team['station'][0] == "B", nil)
+      #end
       frcevent.matchList << tempMatch
     end
   end
