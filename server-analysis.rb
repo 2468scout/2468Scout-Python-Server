@@ -708,8 +708,9 @@ def upcomingMatchSummary(eventcode, matchnumber)
 	nextmatch = {
 		iMatchNumber: matchnumber,
 		sEventCode: eventcode,
-		redSimpleTeams: [],
-		blueSimpleTeams: []
+		redSimpleTeams: [], #[{teamnumber, teamname},{},{}]
+		blueSimpleTeams: [],
+		analytics: [] #[{point contrib, gears per match, role,},{},{},{},{},{}]
 	}
 	apimatch = reqapi("schedule/#{eventcode}?tournamentLevel=qual&start=#{matchnumber}&end=#{matchnumber}")
 	apimatch = JSON.parse(apimatch)
@@ -724,7 +725,7 @@ def upcomingMatchSummary(eventcode, matchnumber)
 		elsif i < 6
 			nextmatch['redSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamN1ame: apiteam['nameShort']}
 		end
-	
+	end	
 
 	return nextmatch
 	#SimpleTeams
