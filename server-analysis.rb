@@ -723,7 +723,7 @@ def upcomingMatchSummary(eventcode, matchnumber)
 		if i < 3
 			nextmatch['blueSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamname: apiteam['nameShort']}
 		elsif i < 6
-			nextmatch['redSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamN1ame: apiteam['nameShort']}
+			nextmatch['redSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamName: apiteam['nameShort']}
 		end
 
 		filename = "public/Teams/#{matchteam['teamNumber']}.json"
