@@ -406,7 +406,7 @@ def analyzeTeamAtEvent(teamnumber, eventcode)
 			jsondata[key] = val #Add to what was read in preparation for re-saving
 		end 
 		jsonfile = File.open(filename, 'w') #Wipes the file for writing
-		jsonfile << jsondata #Re-writes the file
+		jsonfile << jsondata.to_json #Re-writes the file
 		jsonfile.close 
 	rescue => e
 		puts "Error analyzing #{teamnumber}: #{e.message}"
@@ -717,13 +717,27 @@ def upcomingMatchSummary(eventcode, matchnumber)
 	apimatch = apimatch['Schedule'][0] #should be he only item in the hash
 	
 	apimatch['Teams'].each_with_index do |matchteam, i|
-		apiteam = reqapi("teams?teamNumber=#{matchteam}")
+		apiteam = reqapi("teams?teamNumber=#{matchteam['teamNumber']}")
 		apiteam = JSON.parse(apiteam)
 		apiteam = apiteam['teams'][0]
 		if i < 3
 			nextmatch['blueSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamname: apiteam['nameShort']}
 		elsif i < 6
 			nextmatch['redSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamN1ame: apiteam['nameShort']}
+		end
+
+		filename = "public/Teams/#{matchteam['teamNumber']}.json"
+		if File.exists? filename
+			puts "Looks like we have some previous intel for #{matchteam['teamNumber']}."
+			jsondata = retrieveJSON(filename)
+			relevant_analytics = {bHasData: true}
+			jsondata.each do |key, val|
+				relevant_analytics[key] = val #if key == bla bla
+			end
+			nextmatch['analytics'][i] = relevant_analytics
+		else
+			puts "Looks like we've never fully scouted a match with #{matchteam['teamNumber']}."
+			nextmatch['analytics'][i] = {bHasData: false}
 		end
 	end	
 
