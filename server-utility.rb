@@ -486,3 +486,20 @@ def analyzeScoreScouting(eventcode, matchnumber, matchcolor = true)
 	#order by time, add scouted scores, match scores,
 	#difference for .. each second? each millisecond?
 end
+
+
+def colorToBool(color)
+	if "#{color}" == "Blue" || "#{color}" == "blue"
+		return true
+	else
+		return false
+	end
+end
+
+def boolToColor(bool)
+	if bool
+		return "Blue"
+	else
+		return "Red"
+	end
+end
