@@ -86,14 +86,11 @@ def saveTeamPitInfo(jsondata)
 	teamnumber = jsondata['iTeamNumber']
 	Dir.mkdir "public/Teams/#{teamnumber}" unless File.exists? "public/Teams/#{teamnumber}"
 	filename = "public/Teams/#{teamnumber}/#{eventcode}_Pit_Team#{teamnumber}.json"
-	puts "finna start saving #{filename}"
 	existingjson = {}
 	if File.exists? filename #old data
 		existingjson = retrieveJSON(filename)
-		puts "we got old data"
 	end
 	jsondata.each do |key, val| #new data keys to old data
-		puts "shit "
 		existingjson[key] = val #but leaves anything it doesnt change
 	end
 	
@@ -107,9 +104,9 @@ def saveScoreScoutInfo(jsondata)
 	eventcode = jsondata['sEventCode']
 	matchnumber = jsondata['iMatchNumber']
 	side = "Null"
-	side = "Blue" if jsondata['bColor'] == true
-	side = "Red" if jsondata['bColor'] == false
-	filename = "public/Scores/#{eventcode}_Score#{matchnumber}_Side#{side}"
+	side = "blue" if jsondata['bColor'] == true
+	side = "red" if jsondata['bColor'] == false
+	filename = "public/Scores/score_match#{matchnumber}_#{eventcode}_side#{side}.json"
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata.to_json
 	jsonfile.close
@@ -427,7 +424,7 @@ def scoreMatchEvents(sortedevents, scorehash)
 end
 
 def getIncreaseOneTimeList(eventcode, matchnumber, matchcolor = true)
-	filename = "public/Scores/#{eventcode}_Score#{matchnumber}_Side#{matchcolor}.json"
+	filename = filename = "public/Scores/score_match#{matchnumber}_#{eventcode}_side#{side}.json"
 	scorescout = retrieveJSON(filename)
 	return scorescout['increase1TimeList']
 end
