@@ -436,7 +436,7 @@ def analyzeSortedEvents(sortedevents = [], nummatches, fuelguesses)
 		#Partial credit is awarded for not enough gears, or not enough fuel; but gears and fuel can each contribute a max of 1.0
 
 		totalmatches = nummatches #How many matches we have scouted the team in
-		totalgearmtaches = 0 #How many matches the team has played in which they scored at least one gear
+		totalgearmatches = 0 #How many matches the team has played in which they scored at least one gear
 		totaltouchpadmatches = 0
 		totalbaselinematches = 0
 
@@ -703,27 +703,28 @@ def upcomingMatchSummary(eventcode, matchnumber)
 	#alliance partners: performance, strengths and weaknesses
 	#opponents: performance, strengths and weaknesses
 	#heat maps
+	matchnumber = matchnumber.to_i
 	puts "Upcoming match summary for #{eventcode} #{matchnumber}"
 	updateEventFromAPI(eventcode)
-	nextmatch = {
-		iMatchNumber: matchnumber,
-		sEventCode: eventcode,
-		redSimpleTeams: [], #[{teamnumber, teamname},{},{}]
-		blueSimpleTeams: [],
-		analytics: [] #[{point contrib, gears per match, role,},{},{},{},{},{}]
-	}
-	apimatch = reqapi("schedule/#{eventcode}?tournamentLevel=qual&start=#{matchnumber}&end=#{matchnumber}")
+	nextmatch = {}
+	nextmatch['iMatchNumber'] = matchnumber
+	nextmatch['sEventCode'] = eventcode
+	nextmatch['redSimpleTeams'] = [] #[{teamnumber, teamname},{},{}]
+	nextmatch['blueSimpleTeams'] = []
+	nextmatch['analytics'] = [] #[{point contrib, gears per match, role,},{},{},{},{},{}]
+	
+	apimatch = reqapi("schedule/#{eventcode}?tournamentLevel=qual&start=#{matchnumber}")
 	apimatch = JSON.parse(apimatch)
 	apimatch = apimatch['Schedule'][0] #should be he only item in the hash
-	
 	apimatch['Teams'].each_with_index do |matchteam, i|
 		apiteam = reqapi("teams?teamNumber=#{matchteam['teamNumber']}")
 		apiteam = JSON.parse(apiteam)
 		apiteam = apiteam['teams'][0]
 		if i < 3
-			nextmatch['blueSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamname: apiteam['nameShort']}
+			puts "fuck the this #{nextmatch['redSimpleTeams']}"
+			nextmatch['redSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamName: apiteam['nameShort']}			
 		elsif i < 6
-			nextmatch['redSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamName: apiteam['nameShort']}
+			nextmatch['blueSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamname: apiteam['nameShort']}
 		end
 
 		filename = "public/Teams/#{matchteam['teamNumber']}.json"
@@ -740,7 +741,6 @@ def upcomingMatchSummary(eventcode, matchnumber)
 			nextmatch['analytics'][i] = {bHasData: false}
 		end
 	end	
-
 	return nextmatch
 	#SimpleTeams
 	#heat maps

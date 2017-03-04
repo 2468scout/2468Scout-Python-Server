@@ -379,10 +379,12 @@ post '/makePreMatch' do
 		eventcode = params['eventCode']
 		matchnumber = params['matchNumber']
 		prematch = upcomingMatchSummary(eventcode, matchnumber)
+		puts "We did it!"
 		content_type :json
 		status 200
 		body prematch.to_json
-	rescue
+	rescue => e
+		puts e
 		status 400
 	end
 end

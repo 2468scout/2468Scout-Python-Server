@@ -48,7 +48,6 @@ def saveEventsData(frcEvents)
 
         saveevent = event.to_json(options = {})
         saveevent = JSON.parse(saveevent)
-
         schedulename = "public/Events/#{event.sEventCode}_Schedule.json"
 		if File.exist? schedulename
 		  schedulething = retrieveJSON(schedulename)
@@ -306,25 +305,28 @@ def updateEventFromAPI(eventcode)
 	updateRanks(eventcode)
 
 	puts("update an event")
-	eventsString = reqapi('events?eventCode=#{eventcode}')
+	eventsString = reqapi("events?eventCode=#{eventcode}")
 	#puts("Results from FRCAPI events list: " + eventsString)
 	event_to_update = JSON.parse(eventsString) #Get all the events from the API so we don't have to keep bothering them
+	event_to_update = event_to_update['Events'][0]
 	placeholder_array = []
-	tempEvent = FRCEvent.new(event_to_update['name'], event_to_update['code'])
+	tempEvent = FRCEvent.new("#{event_to_update['name']}", "#{event_to_update['code']}")
 	placeholder_array << tempEvent
 	  receivedEvent = {}
-	  receivedEvent = JSON.parse(reqapi('schedule/' + tempEvent.sEventCode + '?tournamentLevel=qual'))
+	  receivedEvent = reqapi("schedule/#{eventcode}?tournamentLevel=qual")
+	  receivedEvent = JSON.parse(receivedEvent)
 	  tempEvent.matchList = []
 	  unless receivedEvent.empty?
-	    receivedEvent['Schedule'].each do |match|
+	    receivedEvent['Schedule'].each do |tempMatch|
 	      tempEvent.matchList << tempMatch
 	    end
 	  end
-	
+
 	placeholder_array.each do |frcevent|
 	  frcevent.simpleTeamList = []
 	  receivedTeamList = {}
-	  receivedTeamList = JSON.parse(reqapi('teams?eventCode=' + frcevent.sEventCode))
+	  receivedTeamList = reqapi("teams?eventCode=#{frcevent.sEventCode}")
+	  receivedTeamList = JSON.parse(receivedTeamList)
 	  if !receivedTeamList.empty?
 	    receivedTeamList['teams'].each do |receivedTeam|
 	      frcevent.simpleTeamList << SimpleTeam.new(receivedTeam['nameShort'],receivedTeam["teamNumber"])
@@ -338,13 +340,13 @@ end
 def updateScores(eventcode)
 	puts "Begin update scores"
 	matchresults = reqapi("matches/#{eventcode}",true) #Provides scores, teams
-	puts "We got matches look #{matches}"
 	#qualdetails = reqapi("scores/#{eventcode}/qual") 
 	#playoffdetails = reqapi("scores/#{eventcode}/playoff") #Data sweet data! Subject to change.
 	#puts "We got qualdetails look #{qualdetails}"
 	$scoresjson["#{eventcode}"] = []
+	matchresults = JSON.parse(matchresults)
 	matchresults["Matches"].each do |matchresult|
-		$scoresjson["#{eventcode}"] << JSON.parse(matchresult)
+		$scoresjson["#{eventcode}"] << matchresult
 	end
 	#$qualdetailsjson[eventcode] = JSON.parse(qualdetails)
 	#$playoffdetailsjson[eventcode] = JSON.parse(playoffdetails)
