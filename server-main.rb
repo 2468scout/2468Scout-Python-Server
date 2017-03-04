@@ -357,6 +357,7 @@ post '/setupScoutSchedule' do
 		eventcode = params['eventCode']
 		puts "I am ready to make scout schedule at #{eventcode}"
 		saveCalculateScoutSchedule(request.body.string, eventcode)
+		saveCalculatePitScoutSchedule(request.body.string, eventcode)
 		status 200
 	rescue
 		status 400

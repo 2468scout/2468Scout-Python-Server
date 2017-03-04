@@ -163,6 +163,13 @@ def saveCalculateHeatMapData(eventcode, teamnumber, sortedevents, haccuracylist,
 	jsonfile.close
 end
 
+def pickOneRandomScout(peopleresponsible)
+	prng = Random.new
+	number = prng.rand(0..peopleresponsible.length-1)
+	result = peopleresponsible[number]
+	return result
+end
+
 def pickEightRandomScouts(peopleresponsible)
 	#eventcode is used as a seed for the pseudorandom number gen
 	result = [] #eight unique scouts (peopleresponsible)
@@ -190,6 +197,7 @@ def pickEightRandomScouts(peopleresponsible)
 end
 
 def saveCalculateScoutSchedule(jsondata, eventcode)
+	puts "Create match scout schedule"
 	#create a scout schedule, then save it
 	scoutschedule = [] #ScheduleItems
 	#sPersonResponsible, sItemType, sEventCod, iMatchNumber, iTeamNumber, iStationNumber, bColor
@@ -268,6 +276,23 @@ def addRematchToScoutSchedule(eventcode, matchnumber)
 	jsonfile.close
 
 	$how_much_data[matchnumber] = 0 #We no longer have relevant match data
+end
+
+def saveCalculatePitScoutSchedule(jsondata, eventcode)
+	puts "Create pit scout schedule"
+	pitobjects = [] #a bunch of teampitscout objects because ian says so
+	#Data from post request
+	jsondata = JSON.parse(jsondata)
+	peopleresponsible = jsondata
+	#Data from API
+	teams_to_scout = getSimpleTeamList(eventcode)
+	teams_to_scout.each do |scoutme|
+		pitobject = {}
+		pitobject['iTeamNumber'] = scoutme.teamNumber
+		pitobject['sEventCode'] = eventcode
+		pitobject['sPersonResponsible'] = pickOneRandomScout(peopleresponsible)
+		saveTeamPitInfo(pitobject.to_json)
+	end
 end
 
 def getSimpleTeamList(eventcode)
