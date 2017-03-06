@@ -81,6 +81,8 @@ def saveTeamMatchInfo(jsondata)
 	unless is_resaved
 		$how_much_data[eventcode][matchnumber] += 1
 		puts "Add 1 to how_much_data. Now #{$how_much_data[eventcode][matchnumber]}"
+	else
+		puts "Request is a copy. Add nothing to how_much_data"
 	end
 	triggerAnalytics(eventcode, matchnumber) if $how_much_data[eventcode][matchnumber] >= 8
 

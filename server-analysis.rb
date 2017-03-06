@@ -712,7 +712,8 @@ def upcomingMatchSummary(eventcode, matchnumber)
 	nextmatch['redSimpleTeams'] = [] #[{teamnumber, teamname},{},{}]
 	nextmatch['blueSimpleTeams'] = []
 	nextmatch['analytics'] = [] #[{point contrib, gears per match, role,},{},{},{},{},{}]
-	
+	nextmatch['rankings'] = []
+
 	apimatch = reqapi("schedule/#{eventcode}?tournamentLevel=qual&start=#{matchnumber}")
 	apimatch = JSON.parse(apimatch)
 	apimatch = apimatch['Schedule'][0] #should be he only item in the hash
@@ -721,7 +722,6 @@ def upcomingMatchSummary(eventcode, matchnumber)
 		apiteam = JSON.parse(apiteam)
 		apiteam = apiteam['teams'][0]
 		if i < 3
-			puts "fuck the this #{nextmatch['redSimpleTeams']}"
 			nextmatch['redSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamName: apiteam['nameShort']}			
 		elsif i < 6
 			nextmatch['blueSimpleTeams'] << {iTeamNumber: matchteam['teamNumber'], sTeamname: apiteam['nameShort']}
@@ -740,9 +740,14 @@ def upcomingMatchSummary(eventcode, matchnumber)
 			puts "Looks like we've never fully scouted a match with #{matchteam['teamNumber']}."
 			nextmatch['analytics'][i] = {bHasData: false}
 		end
-	end	
+
+		apirank = reqapi("rankings/#{eventcode}?teamNumber=#{matchteam['teamNumber']}")
+		apirank = JSON.parse(apirank)
+		apirank = apirank['Rankings'][0]
+		nextmatch['rankings'] << apirank['rank']
+	end
+
 	return nextmatch
-	#SimpleTeams
 	#heat maps
 	#elo / rankings
 	#predicted roles

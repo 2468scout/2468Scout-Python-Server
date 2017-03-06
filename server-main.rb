@@ -299,6 +299,7 @@ end
 post '/postTeamMatch' do
   begin
   	#Save team info
+  	puts "We got a team match"
     saveTeamMatchInfo(request.body.string)
     status 200
   rescue => e
