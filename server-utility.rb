@@ -5,14 +5,19 @@ $how_much_data = {} #eventcodes keyed to {match numbers keyed to integers}
 #Any time matchscout or scorescout is received for a match, the counter increases
 #And if the counter is at least 8, triggers analytics for all 6
 def triggerAnalytics(eventcode, matchnumber)
-	qualdata = JSON.parse(reqapi("schedule/#{eventcode}?tournamentLevel=qual"))
-	qualiteams = qualdata['Schedule'].select{|key, hash| #search through the match hashes
-		hash['matchNumber'] == matchnumber #if match number matches, select it
+	puts "All match data received for match #{matchnumber}. Triggering analytics..."
+	qualdata = reqapi("schedule/#{eventcode}?tournamentLevel=qual")
+	qualdata = JSON.parse(qualdata)
+	qualiteams = qualdata['Schedule'].select{|myhash| #search through the match hashes
+		myhash['matchNumber'] == matchnumber #if match number matches, select it
 	}
+	puts "DEBUG: Selections successful, qualiteams here #{qualiteams}"
 	teams = []
-	qualiteams['Teams'].each do |qualiteam|
-		teams << qualiteam['number'] #get just the team numbers
+	qualiteams[0]['Teams'].each do |qualiteam|
+		puts "DEBUG: Add qualiteam"
+		teams << qualiteam['teamNumber'] #get just the team numbers
 	end
+	puts "DEBUG: Final piece"
 	teams.each do |team|
 		analyzeTeamAtEvent(team, eventcode) #trigger analytics
 	end
@@ -119,6 +124,8 @@ def saveScoreScoutInfo(jsondata)
 	side = "blue" if jsondata['bColor'] == true
 	side = "red" if jsondata['bColor'] == false
 	filename = "public/Scores/score_match#{matchnumber}_#{eventcode}_side#{side}.json"
+	resave = false
+	resave = true if File.exists? filename
 	jsonfile = File.open(filename,'w')
 	jsonfile << jsondata.to_json
 	jsonfile.close
@@ -126,7 +133,8 @@ def saveScoreScoutInfo(jsondata)
 	#Trigger analytics for all 6 teams if we have enough data
 	$how_much_data[eventcode] = {} unless $how_much_data[eventcode]
 	$how_much_data[eventcode][matchnumber] = 0 unless $how_much_data[eventcode][matchnumber]
-	$how_much_data[eventcode][matchnumber] += 1
+	$how_much_data[eventcode][matchnumber] += 1 unless resave
+	puts "How much data? #{$how_much_data[eventcode][matchnumber]}"
 	triggerAnalytics(eventcode, matchnumber) if $how_much_data[eventcode][matchnumber] >= 8
 end
 
