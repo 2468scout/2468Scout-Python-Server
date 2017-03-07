@@ -12,6 +12,7 @@ require 'open-uri'#Wrapper for Net::HTTP (interact with FRC API and client)
 require 'uri'     #Uniform Resource Identifiers (interact with FRC API and client)
 require 'openssl' #Not sure if we need this but we've been having some SSL awkwardness
 require 'ostruct' #Turn JSON into instant objects! Huzzah!
+require 'stringio'
 require_relative 'server-classes.rb'
 require_relative 'server-analysis.rb'
 require_relative 'server-utility.rb'
@@ -19,7 +20,7 @@ require_relative 'server-utility.rb'
 
 ENV['SSL_CERT_FILE'] = 'human/cacert.pem'
 
-set :bind, 'http://scouting.westaaustin.org/' #'0.0.0.0' localhost
+set :bind, 'http://scouting.westaaustin.org/' #'0.0.0.0' #localhost
 set :port, 8080   #DO NOT CHANGE without coordination w/client
 enable :lock #One request processed at a time
 
@@ -190,7 +191,7 @@ end
 
 get '/getEvents' do # Return a JSON of the events we got directly from the API, as well as an identifier
   content_type :json
-  $events
+  $events.to_json
 end
 
 get '/getSimpleTeamList' do
@@ -288,7 +289,14 @@ end
 post '/postPit' do
   begin
     #Save info
-    saveTeamPitInfo(request.body.string)
+    puts "DEBUG: Post pit"
+    if request.body.is_a? StringIO
+    	puts "DEBUG: Received StringIO"
+    	saveTeamPitInfo(request.body.string)
+    else
+    	puts "DEBUG: Received String"
+    	saveTeamPitInfo(request.body)
+    end
     status 200
   rescue => e
     puts e
